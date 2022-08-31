@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+    {{- partial "head.html" . -}}
+    <body>
+        {{- partial "nav.html" . -}}
+        <section>
+            {{- partial "header.html" . -}}
+            {{- block "main" . }}{{- end }}
+        </section>
+        
+        <!-- All icons are created by https://fluenticons.co -->
+    </body>
+</html>

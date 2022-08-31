@@ -1,0 +1,23 @@
+{{ $title := print .Site.Title " | " .Title }}
+{{ if .IsHome }}{{ $title = .Site.Title }}{{ end }}
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+    <title>{{ $title }}</title>
+    <meta name="description" content="{{ $title }}">
+    <meta name="author" content="Florent NOSARI">
+  
+    <meta property="og:title" content="{{ $title }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="#">
+    <meta property="og:description" content="{{ $title }}">
+    <meta property="og:image" content="image.png">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    <link rel="stylesheet" href="/css/styles.css?v=2.0">
+  
+  </head>

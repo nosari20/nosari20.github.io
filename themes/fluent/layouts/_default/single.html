@@ -1,0 +1,9 @@
+{{ define "main" }}
+<article class="preview">
+    <h1><a class="title" href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    <div class="metadata">
+        {{ partial "metadata.html" . }}
+    </div>
+    <p>{{ .Content }}</p>
+</article>
+{{ end }}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nosari20</title>
+    <link>https://nosari20.github.io/</link>
+    <description>Recent content on Nosari20</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 31 Aug 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://nosari20.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Get Intune data in PowerBI</title>
+      <link>https://nosari20.github.io/posts/intune-powerbi/</link>
+      <pubDate>Wed, 31 Aug 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/posts/intune-powerbi/</guid>
+      <description>How to get Intune data from PowerBI report?</description>
+    </item>
+    
+    <item>
+      <title>&gt; whoami</title>
+      <link>https://nosari20.github.io/posts/whoami/</link>
+      <pubDate>Tue, 30 Aug 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/posts/whoami/</guid>
+      <description>Who am i? Why I made this blog? Who am i?</description>
+    </item>
+    
+  </channel>
+</rss>

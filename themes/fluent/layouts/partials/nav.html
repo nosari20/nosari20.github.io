@@ -1,0 +1,14 @@
+<nav>
+    {{ range .Site.Menus.main }}
+        {{ $active := (eq $.RelPermalink .URL) }}
+        <a href="{{ .URL }}" {{ if $active }} class="active"{{ end }}>
+            {{ if .Pre }}
+                {{ $icon := print .Pre | safeHTML }}
+                {{ $icon }}
+            {{ end }}    
+            {{ $text := print .Name | safeHTML }}
+            {{ $text }}
+        </a>
+    {{ end }}
+    {{- partial "footer.html" . -}}
+</nav>
