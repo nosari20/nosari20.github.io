@@ -27,6 +27,8 @@ nav{
 
     position: relative;
 
+    z-index: 1;
+
     height: 100vh;
     min-width: 250px;
     max-width: 250px;
@@ -142,6 +144,7 @@ section{
     height: 100vh;
 
     padding: 15px;
+    padding-top: 60px;
 
     overflow: auto;
 
@@ -150,6 +153,9 @@ section{
 }
 
 section header{
+    position: fixed;
+    top: 15px;
+
     width: calc(100% + 30px);
     height: 50px;
 
@@ -161,7 +167,7 @@ section header{
     color: white;
 }
 
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 900px){
 
     section header{
         padding-left: 55px;
@@ -181,11 +187,7 @@ section .title .date{
 }
 
 
-section .content{
-    
-}
-
-section article {
+section article{
     max-width: 900px;
 
     margin-bottom: 10px;
@@ -195,6 +197,8 @@ section article {
 
     background: white;
     box-shadow: 0px 2px 10px 0px rgb(0 0 0 / 25%); 
+
+    overflow-wrap: anywhere;
     
 }
 
@@ -212,7 +216,7 @@ article h3,  article h1{
     color: grey;
 }
 
-article h3 a, article h1 a {
+article h3 a, article h1 a{
     text-decoration: none;
     color: inherit;
 }
@@ -238,22 +242,38 @@ article .metadata ul.tags li a{
     color: inherit;
 }
 
-article img {
+article img{
     width: 100%;
     max-width: 900px;
 }
 
-article .highlight {
+article code{
+    font-family: Consolas, 'Courier New', monospace;
+    font-weight: initial;
+}
+
+@media only screen and (max-width: 900px){
+    article img{
+        width: 100% !important;
+    }
+}
+
+
+article .highlight{
     width: 100%;
     max-width: 900px;
+
+    margin-bottom: 15px;
+    padding: 0 10px;
 
     overflow: auto;
     
     background: #272822;
+
+    font-size: 0.9rem;
 }
 
-article.preview{
-
+article .caption{
+    font-size: 9px;
 }
-
 
