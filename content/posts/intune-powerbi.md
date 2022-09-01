@@ -7,6 +7,12 @@ summary:  "How to get Intune data from PowerBI report?"
 image: "/posts/intune-powerbi/_header.png"
 ---
 
+## Content
+* Use Intune data whareouse
+* Use Graph API (advanced)
+* Sources / usefull resources
+
+
 ## Use Intune data whareouse
 1. In Microsoft Endpoint Manager portal go to `Reports > Intune data warehouse > Data warehouse` and copy the OData feed URL
 
@@ -97,8 +103,13 @@ in
 * Find a way to create relations
 * Dynamic queries based on filters
 
-### Usefull information
 
 ## Sources / usefull resources
+
+* https://minkus.medium.com/easily-connecting-between-power-query-power-bi-and-microsoft-graph-72333eb95a35
+* https://docs.microsoft.com/en-us/graph/auth-register-app-v2
+* https://docs.microsoft.com/en-us/graph/auth-v2-service
+* https://docs.microsoft.com/en-us/powerquery-m/json-document
+* https://docs.microsoft.com/en-us/powerquery-m/web-contents
 
 

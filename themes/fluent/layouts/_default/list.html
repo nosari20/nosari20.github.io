@@ -1,6 +1,7 @@
 {{ define "main" }}
   {{ range .Pages.ByPublishDate.Reverse }}
-    <article class="preview">
+    <article>
+      <image class="image-header" alt="{{ .Title }}" src="{{ .Params.Image }}"/>
       <h3><a class="title" href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
       <div class="metadata">
         {{ partial "metadata.html" . }}
