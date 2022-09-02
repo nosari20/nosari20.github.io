@@ -1,6 +1,12 @@
-{{ $dateTime := .PublishDate.Format "2006-01-02" }}
 {{ $dateFormat := .Site.Params.dateFormat | default "Jan 2, 2006" }}
-<time datetime="{{ $dateTime }}">{{ .PublishDate.Format $dateFormat }}</time>
+{{ $pubDateTime := .PublishDate.Format "2006-01-02" }}
+Published on: <time datetime="{{ $pubDateTime }}">{{ .PublishDate.Format $dateFormat }}</time>
+
+{{ if .Params.LastMod }}
+    {{ $updateTime := .Params.LastMod.Format "2006-01-02" }}
+    - Last update: <time datetime="{{ $updateTime }}">{{ .Params.LastMod.Format $dateFormat }}</time>
+{{ end }}
+
 <ul class="tags">
 {{ with .Params.tags }}
     {{ range . }}

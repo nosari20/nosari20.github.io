@@ -1,6 +1,7 @@
 ---
 title: "Android Logging guide"
 date: 2022-09-01
+lastmod: 2022-09-01
 draft: false
 tags: ["device-management", "android"]
 summary:  "Fantastic logs and where to find them"

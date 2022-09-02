@@ -1,5 +1,6 @@
 {{ define "main" }}
 <article>
+    <image class="image-header" alt="{{ .Title }}" src="{{ .Params.Image }}"/>
     <h1><a class="title" href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
     <div class="metadata">
         {{ partial "metadata.html" . }}

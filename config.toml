@@ -2,10 +2,14 @@ baseURL = "https://nosari20.github.io"
 languageCode = "en-us"
 title = "Nosari20"
 theme = "fluent"
+enableGitInfo = true
 
 [params]
   description = "IT worker sharing IT things."
   author = "Florent NOSARI"
+
+[frontmatter]
+  lastmod = ["lastmod", ":git", "date", "publishDate"]
 
 [menu]
   [[menu.main]]
