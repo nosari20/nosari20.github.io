@@ -6,6 +6,7 @@ enableGitInfo = true
 
 [params]
   description = "IT worker sharing IT things."
+  image = "/images/image.png"
   author = "Florent NOSARI"
 
 [frontmatter]
