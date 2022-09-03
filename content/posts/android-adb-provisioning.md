@@ -4,7 +4,7 @@ date: 2022-09-02
 lastmod: 2022-09-02
 draft: false
 tags: ["device-management", "android", "android-enterprise"]
-summary:  "How to provision Device Owner using ADB"
+summary:  "How to provision Device Owner using ADB?"
 image: "/posts/android-adb-provisioning/_header.png"
 ogimage: "/posts/android-adb-provisioning/_og.png"
 ---
