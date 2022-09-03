@@ -27,7 +27,7 @@
     <meta property="og:type" content="{{ $type }}">
     <meta property="og:title" content="{{ $title }}">
     <meta property="og:description" content="{{ $description }}">
-    <meta property="og:image" content="{{ .Site.BaseURL }}{{ substr  $image 1 }}">
+    <meta property="og:image" content="{{ .Site.BaseURL }}{{ $image }}">
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
@@ -35,7 +35,7 @@
     <meta property="twitter:url" content="{{ .Site.BaseURL }}">
     <meta name="twitter:title" content="{{ $title }}">
     <meta name="twitter:description" content="{{ $description }}">
-    <meta name="twitter:image" content="{{ .Site.BaseURL }}{{ substr  $image 1 }}">
+    <meta name="twitter:image" content="{{ .Site.BaseURL }}{ $image }}">
 
     <meta name="theme-color" content="#302F2A" />
     <link rel="icon" href="/images/favicon.png">
