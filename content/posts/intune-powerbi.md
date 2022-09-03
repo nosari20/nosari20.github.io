@@ -6,6 +6,7 @@ draft: false
 tags: ["device-management", "dev-scripting", "misc"]
 summary:  "How to get Intune data from PowerBI report?"
 image: "/posts/intune-powerbi/_header.png"
+ogimage: "/posts/intune-powerbi/_og.png"
 ---
 
 ## Content

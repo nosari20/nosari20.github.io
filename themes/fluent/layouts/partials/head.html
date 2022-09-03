@@ -5,8 +5,8 @@
 {{ $description := print .Site.Params.Description}}
 {{ if .Params.Summary }}{{ $description = .Params.Summary }}{{ end }}
 
-{{ $image := print .Site.Params.Image}}
-{{ if .Params.Image }}{{ $image = .Params.Image }}{{ end }}
+{{ $image := print .Site.Params.OgImage}}
+{{ if .Params.OgImage }}{{ $image = .Params.OgImage }}{{ end }}
 
 
 {{ $type := "website"}}
