@@ -7,6 +7,7 @@ tags: ["device-management", "windows", "powershell"]
 summary:  "Customize the Windows 10+ default theme using PowerShell script (wallpaper, lockscreen, etc.)"
 image: "/posts/windows-default-theme/_header.png"
 ogimage: "/posts/windows-default-theme/_og.png"
+githubissueID: "1" 
 ---
 ## Content
 * Purpose

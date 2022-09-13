@@ -7,4 +7,9 @@
     </div>
     <p>{{ .Content }}</p>
 </article>
+    {{ with .Params.githubissueID }}
+        <div id="comments">
+            {{ partial "comments.html" $ }}
+        </div>
+   {{ end }}
 {{ end }}

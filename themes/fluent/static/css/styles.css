@@ -297,3 +297,71 @@ article .caption{
     font-size: 9px;
 }
 
+
+#comments {
+    max-width: 900px;
+    min-height: 115px;
+    
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1px 30px 0 30px;
+
+    background: white;
+    box-shadow: 0px 2px 10px 0px rgb(0 0 0 / 25%);
+    
+    overflow-wrap: anywhere;
+}
+
+#comments .gh-comment {
+  width: calc(100% + 60px);
+  
+  margin-top: 15px;
+  margin-left: -30px;
+  padding: 5px 30px;
+
+}
+
+#comments .gh-comment:nth-child(even){
+    background-color: #f6f8fa;;
+}
+
+#comments .gh-header {
+  display: flex;
+  color: #586069;
+  padding: 10px;
+  font-size: 85%;
+}
+
+#comments .gh-username {
+  color: #586069;
+}
+
+#comments .gh-body {
+  padding: 10px 15px;
+}
+
+#comments .gh-body code {
+  font-size: 120%;
+}
+#comments .gh-body > div.highlight > pre {
+  padding: 10px;
+  color: lime;
+  font-size: 120%;
+  background-color: #000;
+  border-radius: 5px;
+}
+
+#comments .gh-comment p {
+  margin: 0px 0px 10px 0px;
+}
+#comments .gh-comment p:last-child {
+  margin: 0;
+}
+
+.gh-header > img {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  vertical-align: middle;
+  border-radius: 100%;
+}

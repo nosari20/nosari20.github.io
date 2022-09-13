@@ -7,6 +7,7 @@ tags: ["device-management", "android", "android-enterprise"]
 summary:  "How to provision Device Owner using ADB?"
 image: "/posts/android-adb-provisioning/_header.png"
 ogimage: "/posts/android-adb-provisioning/_og.png"
+githubissueID: "2" 
 ---
 
 ## Content

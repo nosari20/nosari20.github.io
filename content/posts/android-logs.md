@@ -7,6 +7,7 @@ tags: ["device-management", "android"]
 summary:  "Fantastic logs and where to find them"
 image: "/posts/android-logs/_header.png"
 ogimage: "/posts/android-logs/_og.png"
+githubissueID: "3" 
 ---
 
 ## Content

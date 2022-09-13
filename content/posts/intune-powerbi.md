@@ -1,5 +1,5 @@
 ---
-title: "Get Intune data in PowerBI"
+title: "Get Intune data with PowerBI"
 date: 2022-08-31
 lastmod: 2022-09-01
 draft: false
@@ -7,6 +7,7 @@ tags: ["device-management", "dev-scripting", "misc"]
 summary:  "How to get Intune data from PowerBI report?"
 image: "/posts/intune-powerbi/_header.png"
 ogimage: "/posts/intune-powerbi/_og.png"
+githubissueID: "4" 
 ---
 
 ## Content

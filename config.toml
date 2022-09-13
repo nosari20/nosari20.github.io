@@ -8,6 +8,8 @@ enableGitInfo = true
   description = "IT worker sharing IT things."
   ogimage = "/images/_og.png"
   author = "Florent NOSARI"
+  githubAccount = "nosari20"
+  githubRepo = "nosari20.github.io"
 
 [frontmatter]
   lastmod = ["lastmod", ":git", "date", "publishDate"]
