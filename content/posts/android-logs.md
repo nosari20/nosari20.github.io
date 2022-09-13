@@ -19,7 +19,7 @@ ogimage: "/posts/android-logs/_og.png"
 
 ### Purpose and content
 
-Android adb logs contain all runtime data about applications and system process. Log level can be specified and logs can be filtered. 
+Android adb logs contain all runtime data about applications and system processes. Log level can be specified and logs can be filtered. 
 
 ADB logs look likes the following example:
 
@@ -135,6 +135,8 @@ adb bugreport
 ## Samsung dumpstate
 
 ### Purpose and content
+
+Samsung dumpstate is a specific set of log files that are always requested by Samsung support, the logs include the same data we can found in a bug report with aditional Samsung specific logs and data.
 
 ### How to generate a dumpstate
 

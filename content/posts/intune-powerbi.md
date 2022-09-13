@@ -101,7 +101,7 @@ in
 ![Result](/posts/intune-powerbi/results.png)
 
 
-### //TODO
+### Next steps
 * Find a way to create relations
 * Dynamic queries based on filters
 

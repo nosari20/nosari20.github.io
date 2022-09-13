@@ -6,7 +6,34 @@
     <description>Recent content on Nosari20</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 31 Aug 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://nosari20.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 04 Sep 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://nosari20.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Customize Windows 10&#43; default theme</title>
+      <link>https://nosari20.github.io/posts/windows-default-theme/</link>
+      <pubDate>Sun, 04 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/posts/windows-default-theme/</guid>
+      <description>Customize the Windows 10+ default theme using PowerShell script (wallpaper, lockscreen, etc.)</description>
+    </item>
+    
+    <item>
+      <title>Android Enterprise Device Owner ADB provisioning</title>
+      <link>https://nosari20.github.io/posts/android-adb-provisioning/</link>
+      <pubDate>Fri, 02 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/posts/android-adb-provisioning/</guid>
+      <description>How to provision Device Owner using ADB?</description>
+    </item>
+    
+    <item>
+      <title>Android Logging guide</title>
+      <link>https://nosari20.github.io/posts/android-logs/</link>
+      <pubDate>Thu, 01 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/posts/android-logs/</guid>
+      <description>Fantastic logs and where to find them</description>
+    </item>
+    
     <item>
       <title>Get Intune data in PowerBI</title>
       <link>https://nosari20.github.io/posts/intune-powerbi/</link>
