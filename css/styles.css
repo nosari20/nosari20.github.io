@@ -236,6 +236,7 @@ article .metadata ul.tags li{
     display: inline-block;
 
     margin: 0;
+    margin-right: 5px;
 }
 
 article .metadata ul.tags li a{
@@ -261,6 +262,10 @@ article table, article th, article td {
 article table thead {
     background: #272822;
     color: white;
+}
+
+article table td {
+    min-width: 100px;
 }
 
 article table tbody tr:nth-child(even){
