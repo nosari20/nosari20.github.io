@@ -1,7 +1,7 @@
 ---
 title: "Customize Windows 10+ default theme"
 date: 2022-09-13
-lastmod: 2022-12-04
+lastmod: 2022-09-13
 draft: false
 tags: ["device-management", "windows", "powershell"]
 summary:  "Customize the Windows 10+ default theme using PowerShell script (wallpaper, lockscreen, etc.)"
