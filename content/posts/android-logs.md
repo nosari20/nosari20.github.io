@@ -22,7 +22,7 @@ githubissueID: "3"
 
 Android adb logs contain all runtime data about applications and system processes. Log level can be specified and logs can be filtered. 
 
-ADB logs look likes the following example:
+ADB logs look like the following example:
 
 ![ADB logs](/posts/android-logs/adb-logs.png)
 
@@ -137,7 +137,7 @@ adb bugreport
 
 ### Purpose and content
 
-Samsung dumpstate is a specific set of log files that are always requested by Samsung support, the logs include the same data we can found in a bug report with aditional Samsung specific logs and data.
+Samsung dumpstate is a specific set of log files that are always requested by Samsung support. The logs include the same data we can find in a bug report with aditional Samsung specific logs and data.
 
 ### How to generate a dumpstate
 

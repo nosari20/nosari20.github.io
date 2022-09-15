@@ -40,9 +40,9 @@ githubissueID: "4"
 
 ## Use Graph API (advanced)
 
-### Why using Graph API?
+### Why use Graph API?
 
-Intune data whareouse has limited set of available data table. For example you cannot filter devices by group membership. Using Graph API can resolve this limitation but we cannot browse the whole database with Graph API so it will be difficult to create relationship between results.
+Intune data warehouse has a limited set of available data tables. For example, you cannot filter devices by group membership. Using Graph API can resolve this limitation but we cannot browse the whole database with Graph API so it will be difficult to create relationships between results.
 
 ### Prerequisites
 * Create app registration in Azure

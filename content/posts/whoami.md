@@ -8,5 +8,5 @@ image: "/posts/whoami/_header.png"
 ogimage: "/posts/whoami/_og.png"
 ---
 
-My name is Florent, I work in IT field since 2018. I will share on this blog what I like to do and some usefull information avout device management, scripting and other IT related subjects.
+My name is Florent, I work in the IT field since 2018. I will share on this blog what I like to do and some useful information about device management, scripting and other IT related subjects.
 By the way, this is also my personal knowledge base.

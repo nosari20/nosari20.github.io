@@ -17,7 +17,7 @@ githubissueID: "1"
 
 ## Purpose
 
-One day, I wanted to change the default wallpaper and lockscreen of Windows compters for all the user profiles and let the users change these settings as they want. I find different ways by browsing Internet but they did not aswere all my needs.
+One day, I wanted to change the default wallpaper and lockscreen of Windows compters for all the user profiles and let the users change these settings as they want. I find different ways by browsing Internet but they did not answere all my needs.
 My needs were the folowing:
 * Set custom wallpaper
 * Customize wallpaper screen
@@ -32,7 +32,7 @@ My needs were the folowing:
 
 ### Technical basis
 
-This solution rely on the Win32 API function [SystemParametersInfo](https://docs.microsoft.com/fr-fr/windows/win32/api/winuser/nf-winuser-systemparametersinfoa) from `user32.dll`. This script must be executed in User context or ran using `ServiceUI.exe` from [Microsoft Deployment Toolkit](https://www.microsoft.com/en-us/download/details.aspx?id=54259)
+This solution relies on the Win32 API function [SystemParametersInfo](https://docs.microsoft.com/fr-fr/windows/win32/api/winuser/nf-winuser-systemparametersinfoa) from `user32.dll`. This script must be executed in User context or ran using `ServiceUI.exe` from [Microsoft Deployment Toolkit](https://www.microsoft.com/en-us/download/details.aspx?id=54259)
 
 ### Limitations
 * Must be executed in user context
@@ -106,7 +106,7 @@ Set-ItemProperty -Path $regKey -Force -Name LockScreenImage -value "C:\Custom-Fo
 
 ### Technical basis
 
-I found that we can simply customize the default theme using the following registry values
+I found that we can simply customize the default theme using the following registry values:
 
 | Name               | Path                                                        | Type     | Value                       | 
 |--------------------|-------------------------------------------------------------|----------|-----------------------------|

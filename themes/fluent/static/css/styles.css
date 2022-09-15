@@ -188,7 +188,7 @@ section .title .date{
 
 
 section article{
-    max-width: 900px;
+    max-width: 1000px;
 
     margin-bottom: 10px;
     margin-left: auto;
@@ -245,7 +245,6 @@ article .metadata ul.tags li a{
 
 article img{
     width: 100%;
-    max-width: 900px;
 }
 
 article code{
@@ -299,7 +298,7 @@ article .caption{
 
 
 #comments {
-    max-width: 900px;
+    max-width: 1000px;
     min-height: 115px;
     
     margin-left: auto;

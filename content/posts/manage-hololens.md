@@ -9,7 +9,8 @@ image: "/posts/manage-hololens/_header.png"
 ogimage: "/posts/manage-hololens/_og.png"
 ---
 ## Content
-* Purpose
-* Study
-* PowerShell script
+* Use cases
+* Enrollment
+* Policies
+* Applications
 * Sources / usefull resources

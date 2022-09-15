@@ -17,13 +17,13 @@ githubissueID: "2"
 
 ## Purpose
 
-One day, I had to make some screen capture for the whole enrollement process, but some app screens where protected to prevent screenshot. I find a solution: provision device using `adb`, enable `Developer Options` and use [scrcpy](https://github.com/Genymobile/scrcpy) to get my device screen on my computer.
+One day, I had to do some screen capture for the whole enrollment process, but some app screens were protected to prevent screenshots. I found a solution: provision device using `adb`, enable `Developer Options` and use [scrcpy](https://github.com/Genymobile/scrcpy) to get my device screen on my computer.
 
 ## Provisioning
 
 1. Initialize device as usual (do not provision the device with standard Anrdoid Enterprise provisioning method)
 2. Install the DPC client
-3. Remove all Google accounts on the device
+3. Remove all Google accounts on device
 4. Enable `Developper Options` and debug mode
 5. Set the DPC role to the DPC client (cannot be undone or changed) with the following commands:
 
