@@ -1,7 +1,7 @@
 ---
 title: "Customize Windows 10+ default theme"
 date: 2022-09-13
-lastmod: 2022-09-13
+lastmod: 2022-09-14
 draft: false
 tags: ["device-management", "windows", "powershell"]
 summary:  "Customize the Windows 10+ default theme using PowerShell script (wallpaper, lockscreen, etc.)"
@@ -212,13 +212,21 @@ Function Set-INIValue(){
 
         [Parameter(Mandatory=$true, Position=1)] 
         [ValidateNotNullOrEmpty()]
-        [string]$Key,
+        [string]$Category,
 
         [Parameter(Mandatory=$true, Position=2)] 
         [ValidateNotNullOrEmpty()]
+        [string]$Key,
+
+        [Parameter(Mandatory=$true, Position=3)] 
+        [ValidateNotNullOrEmpty()]
         [string]$Value
     )
-    $INICOntent -Replace "(?m)^$Key=.*","$Key=$Value"
+    If($INICOntent -match "(?m)^$Key=.*"){
+        $INICOntent -Replace "(?m)^$Key=.*","$Key=$Value"
+    }Else{
+        $INICOntent -Replace "(?m)^\[$Category\]","[$Category]`n$Key=$Value"
+    }
 }
 
 ################################# Customization ####################################################
@@ -234,11 +242,12 @@ Invoke-WebRequest -Uri "https://wallpaper-house.com/data/out/10/wallpaper2you_38
 
 #--------------------------------------------------------------------------------------------------------------#
 $THEME=@{
-    "DisplayName"       =       "CORPORATE"
-    "Wallpaper"         =       "$WALLPAPER_PATH"
-    "WallpaperStyle"    =       "10"
-    "SystemMode"        =       "Dark"
-    "ColorizationColor" =       "#3F3F3F"    
+    "Theme:DisplayName"                         =       "CORPORATE"
+    "Control Panel\Desktop:Wallpaper"           =       "$WALLPAPER_PATH"
+    "Control Panel\Desktop:WallpaperStyle"      =       "10"
+    "VisualStyles:SystemMode"                    =      "Dark"
+    "VisualStyles:ColorizationColor"            =       "0XC40078D7"
+    "VisualStyles:AppMode"                      =       "Dark" 
 }
 # Doc: https://docs.microsoft.com/en-us/windows/win32/controls/themesfileformat-overview
 #--------------------------------------------------------------------------------------------------------------#
@@ -262,10 +271,11 @@ $themeFileContent = Get-Content -Path "$THEME_FOLDER\$THEME_FILENAME" | Out-Stri
 
 
 ## Customize theme
+## Customize theme
 ForEach($item in $THEME.Keys){
-    $item
-    $themeFileContent =  Set-INIValue "$themeFileContent" "$item" "$($THEME[$item])"
+    $themeFileContent =  Set-INIValue "$themeFileContent" "$(($item -Split ':')[0])" "$(($item -Split ':')[1])" "$($THEME[$item])"
 }
+
 
 ## Set file content
 $themeFileContent | Out-File -FilePath  "$THEME_FOLDER\$THEME_FILENAME"
