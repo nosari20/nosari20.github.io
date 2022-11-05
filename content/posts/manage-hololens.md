@@ -7,6 +7,7 @@ tags: ["device-management", "windows", "hololens"]
 summary:  "Manage HoloLens devices using MDM and Azure AD"
 image: "/posts/manage-hololens/_header.png"
 ogimage: "/posts/manage-hololens/_og.png"
+githubissueID: "5"
 ---
 ## Content
 * Use cases
