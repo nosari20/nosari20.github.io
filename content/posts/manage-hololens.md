@@ -75,7 +75,7 @@ At the time of writing this article, Microsoft Store for Business is the only pu
 
 Private apps can be uploaded directly to UEM solution, apps must meet. If you want to get the AUMID of an app, you can follow the procedure in the appendices.
 
-## Standard
+## Security
 
 ### Overview
 
