@@ -232,9 +232,10 @@ Publisher hash is the result of the following operations on attribute "Publisher
           Version="1.0.0.0"
           ProcessorArchitecture="x86" />
 ```
-```
+``
 Publisher → UTF16 → SHA256 → Take first 40-bits → Encode base32
-```
+``
+
 Powershell script (source : [Jeroen de Jong](https://stackoverflow.com/users/13227110/jeroen-de-jong) from [StackOverflow post](https://stackoverflow.com/questions/21568483/how-to-calculate-publisherid-from-publisher)):
 
 ```ps1
