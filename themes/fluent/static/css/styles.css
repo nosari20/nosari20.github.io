@@ -220,6 +220,11 @@ article h3 a, article h1 a{
     color: inherit;
 }
 
+article h4 {
+    font-family: 'Segoe UI Bold', sans-serif;
+    font-weight: normal;
+}
+
 article .metadata{
     font-size: 11px;
     color: grey;
@@ -251,8 +256,14 @@ article code{
     font-weight: initial;
 }
 
+article table {
+    margin-block-start: 1em;
+}
+
 article table, article th, article td {
-    border: 1px solid;
+    border: 1px solid #272822;
+    
+    padding: 0 10px;
     
     border-collapse: collapse;
 }

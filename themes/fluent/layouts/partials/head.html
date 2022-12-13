@@ -44,5 +44,34 @@
   
     <link rel="stylesheet" href="/css/styles.css?v=2.0">
     <link rel="stylesheet" href="/css/print.css?v=1.0" media="print">
+
+    {{- if or (.HasShortcode "mathjax/block") (.HasShortcode "mathjax/inline") -}}
+    <style>
+      .has-mathjax {
+          visibility: hidden;
+      }
+      span.has-mathjax mjx-container {
+        display: inline-block !important;
+      }
+
+    </style>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script>
+    window.MathJax = {
+      startup: {
+        pageReady: () => {
+          return MathJax.startup.defaultPageReady().then(() => {
+            for (let element of document.getElementsByClassName("has-mathjax")) {
+                element.style.visibility = "visible"
+            }
+          });
+        }
+      }
+    };
+    </script>
+    {{- end -}}
   
   </head>

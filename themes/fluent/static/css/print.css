@@ -10,3 +10,8 @@ section {
     padding: 0;
     height: auto;
 }
+
+section article{
+    box-shadow: none !important;
+    margin: 0;
+}
