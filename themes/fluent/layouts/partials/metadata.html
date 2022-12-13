@@ -7,6 +7,8 @@ Published on: <time datetime="{{ $pubDateTime }}">{{ .PublishDate.Format $dateFo
     - Last update: <time datetime="{{ $updateTime }}">{{ .Params.LastMod.Format $dateFormat }}</time>
 {{ end }}
 
+<div class="meta-url">Url: {{ .Permalink | absURL }} </div>
+
 <ul class="tags">
 {{ with .Params.tags }}
     {{ range . }}
