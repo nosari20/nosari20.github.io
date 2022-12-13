@@ -24,7 +24,7 @@ My needs were the folowing:</p><ul><li>Set custom wallpaper</li><li>Customize wa
 </span></span><span style=display:flex><span>    Add-Type $code 
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Call C# function</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>[Win32.Wallpaper]</span>::SetWallpaper($MyWallpaper)
+</span></span><span style=display:flex><span>    [<span style=color:#66d9ef>Win32.Wallpaper</span>]::SetWallpaper($MyWallpaper)
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e>## Call your function</span>
@@ -108,26 +108,26 @@ My needs were the folowing:</p><ul><li>Set custom wallpaper</li><li>Customize wa
 </span></span><span style=display:flex><span><span style=color:#75715e># Define function to update theme file</span>
 </span></span><span style=display:flex><span><span style=color:#66d9ef>Function</span> Set-INIValue(){
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>param</span>(
-</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>Parameter</span>(<span style=color:#66d9ef>Mandatory</span>=$true, <span style=color:#66d9ef>Position</span>=0)] 
+</span></span><span style=display:flex><span>        [Parameter(<span style=color:#a6e22e>Mandatory</span>=$true, <span style=color:#a6e22e>Position</span>=<span style=color:#ae81ff>0</span>)] 
 </span></span><span style=display:flex><span>        [ValidateNotNullOrEmpty()]
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>[string]</span>$INICOntent,
+</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>string</span>]$INICOntent,
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>Parameter</span>(<span style=color:#66d9ef>Mandatory</span>=$true, <span style=color:#66d9ef>Position</span>=1)] 
+</span></span><span style=display:flex><span>        [Parameter(<span style=color:#a6e22e>Mandatory</span>=$true, <span style=color:#a6e22e>Position</span>=<span style=color:#ae81ff>1</span>)] 
 </span></span><span style=display:flex><span>        [ValidateNotNullOrEmpty()]
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>[string]</span>$Category,
+</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>string</span>]$Category,
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>Parameter</span>(<span style=color:#66d9ef>Mandatory</span>=$true, <span style=color:#66d9ef>Position</span>=2)] 
+</span></span><span style=display:flex><span>        [Parameter(<span style=color:#a6e22e>Mandatory</span>=$true, <span style=color:#a6e22e>Position</span>=<span style=color:#ae81ff>2</span>)] 
 </span></span><span style=display:flex><span>        [ValidateNotNullOrEmpty()]
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>[string]</span>$Key,
+</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>string</span>]$Key,
 </span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>Parameter</span>(<span style=color:#66d9ef>Mandatory</span>=$true, <span style=color:#66d9ef>Position</span>=3)] 
+</span></span><span style=display:flex><span>        [Parameter(<span style=color:#a6e22e>Mandatory</span>=$true, <span style=color:#a6e22e>Position</span>=<span style=color:#ae81ff>3</span>)] 
 </span></span><span style=display:flex><span>        [ValidateNotNullOrEmpty()]
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>[string]</span>$Value
+</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>string</span>]$Value
 </span></span><span style=display:flex><span>    )
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>If</span>($INICOntent <span style=color:#f92672>-match</span> <span style=color:#e6db74>&#34;(?m)^$Key=.*&#34;</span>){
-</span></span><span style=display:flex><span>        $INICOntent <span style=color:#f92672>-Replace</span> <span style=color:#e6db74>&#34;(?m)^$Key=.*&#34;</span>,<span style=color:#e6db74>&#34;$Key=$Value&#34;</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>If</span>($INICOntent <span style=color:#f92672>-match</span> <span style=color:#e6db74>&#34;(?m)^</span>$Key<span style=color:#e6db74>=.*&#34;</span>){
+</span></span><span style=display:flex><span>        $INICOntent <span style=color:#f92672>-Replace</span> <span style=color:#e6db74>&#34;(?m)^</span>$Key<span style=color:#e6db74>=.*&#34;</span>,<span style=color:#e6db74>&#34;</span>$Key<span style=color:#e6db74>=</span>$Value<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>    }<span style=color:#66d9ef>Else</span>{
-</span></span><span style=display:flex><span>        $INICOntent <span style=color:#f92672>-Replace</span> <span style=color:#e6db74>&#34;(?m)^\[$Category\]&#34;</span>,<span style=color:#e6db74>&#34;[$Category]</span><span style=color:#ae81ff>`n</span><span style=color:#e6db74>$Key=$Value&#34;</span>
+</span></span><span style=display:flex><span>        $INICOntent <span style=color:#f92672>-Replace</span> <span style=color:#e6db74>&#34;(?m)^\[</span>$Category<span style=color:#e6db74>\]&#34;</span>,<span style=color:#e6db74>&#34;[</span>$Category<span style=color:#e6db74>]</span><span style=color:#ae81ff>`n</span>$Key<span style=color:#e6db74>=</span>$Value<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
@@ -140,12 +140,12 @@ My needs were the folowing:</p><ul><li>Set custom wallpaper</li><li>Customize wa
 </span></span><span style=display:flex><span><span style=color:#75715e># Download theme or copy it from app package</span>
 </span></span><span style=display:flex><span>New-Item <span style=color:#e6db74>&#34;C:\Windows\Web\Wallpaper\Corporate&#34;</span> -ItemType Directory -Force | Out-Null
 </span></span><span style=display:flex><span>$WALLPAPER_PATH = <span style=color:#e6db74>&#34;C:\Windows\Web\Wallpaper\Corporate\wallpaper.png&#34;</span>
-</span></span><span style=display:flex><span>Invoke-WebRequest -Uri <span style=color:#e6db74>&#34;https://wallpaper-house.com/data/out/10/wallpaper2you_388644.png&#34;</span> -OutFile <span style=color:#e6db74>&#34;$WALLPAPER_PATH&#34;</span>
+</span></span><span style=display:flex><span>Invoke-WebRequest -Uri <span style=color:#e6db74>&#34;https://wallpaper-house.com/data/out/10/wallpaper2you_388644.png&#34;</span> -OutFile <span style=color:#e6db74>&#34;</span>$WALLPAPER_PATH<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e>#--------------------------------------------------------------------------------------------------------------#</span>
 </span></span><span style=display:flex><span>$THEME=@{
 </span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;Theme:DisplayName&#34;</span>                         =       <span style=color:#e6db74>&#34;CORPORATE&#34;</span>
-</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;Control Panel\Desktop:Wallpaper&#34;</span>           =       <span style=color:#e6db74>&#34;$WALLPAPER_PATH&#34;</span>
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;Control Panel\Desktop:Wallpaper&#34;</span>           =       <span style=color:#e6db74>&#34;</span>$WALLPAPER_PATH<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;Control Panel\Desktop:WallpaperStyle&#34;</span>      =       <span style=color:#e6db74>&#34;10&#34;</span>
 </span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;VisualStyles:SystemMode&#34;</span>                    =      <span style=color:#e6db74>&#34;Dark&#34;</span>
 </span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;VisualStyles:ColorizationColor&#34;</span>            =       <span style=color:#e6db74>&#34;0XC40078D7&#34;</span>
@@ -161,48 +161,48 @@ My needs were the folowing:</p><ul><li>Set custom wallpaper</li><li>Customize wa
 </span></span><span style=display:flex><span>$THEME_FOLDER = <span style=color:#e6db74>&#34;C:\Windows\resources\Themes&#34;</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e># Copy Current theme</span>
-</span></span><span style=display:flex><span>$currentThemePath = <span style=color:#e6db74>&#34;</span>$(Get-ItemPropertyValue <span style=color:#e6db74>&#34;Registry::$THEME_REGISTRY_KEY&#34;</span> <span style=color:#e6db74>&#34;InstallTheme&#34;</span>)<span style=color:#e6db74>&#34;</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>If</span>(<span style=color:#e6db74>&#34;$currentThemePath&#34;</span> <span style=color:#f92672>-ne</span> <span style=color:#e6db74>&#34;$THEME_FOLDER\$THEME_FILENAME&#34;</span>){
-</span></span><span style=display:flex><span>    Copy-Item <span style=color:#e6db74>&#34;$currentThemePath&#34;</span> -Destination <span style=color:#e6db74>&#34;$THEME_FOLDER\$THEME_FILENAME&#34;</span>
+</span></span><span style=display:flex><span>$currentThemePath = <span style=color:#e6db74>&#34;</span>$(Get-ItemPropertyValue <span style=color:#e6db74>&#34;Registry::</span>$THEME_REGISTRY_KEY<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;InstallTheme&#34;</span>)<span style=color:#e6db74>&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>If</span>(<span style=color:#e6db74>&#34;</span>$currentThemePath<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>-ne</span> <span style=color:#e6db74>&#34;</span>$THEME_FOLDER<span style=color:#e6db74>\</span>$THEME_FILENAME<span style=color:#e6db74>&#34;</span>){
+</span></span><span style=display:flex><span>    Copy-Item <span style=color:#e6db74>&#34;</span>$currentThemePath<span style=color:#e6db74>&#34;</span> -Destination <span style=color:#e6db74>&#34;</span>$THEME_FOLDER<span style=color:#e6db74>\</span>$THEME_FILENAME<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e># Edit theme file</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e>## Get file content</span>
-</span></span><span style=display:flex><span>$themeFileContent = Get-Content -Path <span style=color:#e6db74>&#34;$THEME_FOLDER\$THEME_FILENAME&#34;</span> | Out-String
+</span></span><span style=display:flex><span>$themeFileContent = Get-Content -Path <span style=color:#e6db74>&#34;</span>$THEME_FOLDER<span style=color:#e6db74>\</span>$THEME_FILENAME<span style=color:#e6db74>&#34;</span> | Out-String
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e>## Customize theme</span>
 </span></span><span style=display:flex><span><span style=color:#75715e>## Customize theme</span>
 </span></span><span style=display:flex><span><span style=color:#66d9ef>ForEach</span>($item <span style=color:#66d9ef>in</span> $THEME.Keys){
-</span></span><span style=display:flex><span>    $themeFileContent =  Set-INIValue <span style=color:#e6db74>&#34;$themeFileContent&#34;</span> <span style=color:#e6db74>&#34;</span>$(($item -Split <span style=color:#e6db74>&#39;:&#39;</span>)[0])<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;</span>$(($item -Split <span style=color:#e6db74>&#39;:&#39;</span>)[1])<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;</span>$($THEME[$item])<span style=color:#e6db74>&#34;</span>
+</span></span><span style=display:flex><span>    $themeFileContent =  Set-INIValue <span style=color:#e6db74>&#34;</span>$themeFileContent<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;</span>$(($item -Split <span style=color:#e6db74>&#39;:&#39;</span>)[<span style=color:#ae81ff>0</span>])<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;</span>$(($item -Split <span style=color:#e6db74>&#39;:&#39;</span>)[<span style=color:#ae81ff>1</span>])<span style=color:#e6db74>&#34;</span> <span style=color:#e6db74>&#34;</span>$($THEME[$item])<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e>## Set file content</span>
-</span></span><span style=display:flex><span>$themeFileContent | Out-File -FilePath  <span style=color:#e6db74>&#34;$THEME_FOLDER\$THEME_FILENAME&#34;</span>
+</span></span><span style=display:flex><span>$themeFileContent | Out-File -FilePath  <span style=color:#e6db74>&#34;</span>$THEME_FOLDER<span style=color:#e6db74>\</span>$THEME_FILENAME<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#75715e># Set as new theme</span>
-</span></span><span style=display:flex><span>Set-ItemProperty -Path <span style=color:#e6db74>&#34;Registry::$THEME_REGISTRY_KEY&#34;</span> -Name <span style=color:#e6db74>&#34;ThemeName&#34;</span> -Value <span style=color:#e6db74>&#34;$THEME_NAME&#34;</span>
-</span></span><span style=display:flex><span>Set-ItemProperty -Path <span style=color:#e6db74>&#34;Registry::$THEME_REGISTRY_KEY&#34;</span> -Name <span style=color:#e6db74>&#34;InstallTheme&#34;</span> -Value <span style=color:#e6db74>&#34;$THEME_FOLDER\$THEME_FILENAME&#34;</span>
+</span></span><span style=display:flex><span>Set-ItemProperty -Path <span style=color:#e6db74>&#34;Registry::</span>$THEME_REGISTRY_KEY<span style=color:#e6db74>&#34;</span> -Name <span style=color:#e6db74>&#34;ThemeName&#34;</span> -Value <span style=color:#e6db74>&#34;</span>$THEME_NAME<span style=color:#e6db74>&#34;</span>
+</span></span><span style=display:flex><span>Set-ItemProperty -Path <span style=color:#e6db74>&#34;Registry::</span>$THEME_REGISTRY_KEY<span style=color:#e6db74>&#34;</span> -Name <span style=color:#e6db74>&#34;InstallTheme&#34;</span> -Value <span style=color:#e6db74>&#34;</span>$THEME_FOLDER<span style=color:#e6db74>\</span>$THEME_FILENAME<span style=color:#e6db74>&#34;</span>
 </span></span></code></pre></div><h3 id=applying-theme-to-user-already-logged-in-optional>Applying theme to user already logged-in (optional)</h3><h3 id=technical-basis-3>Technical basis</h3><p>In order to apply the theme to the current user, you can use the following code:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-ps1 data-lang=ps1><span style=display:flex><span>rundll32.exe themecpl.dll,OpenThemeAction <span style=color:#e6db74>&#34;C:\path\to\mytheme.theme&#34;</span>
 </span></span><span style=display:flex><span><span style=color:#75715e># Source: https://stackoverflow.com/questions/546818/how-do-i-change-the-current-windows-theme-programmatically</span>
 </span></span></code></pre></div><p>This code must be run in the user context, you can use <a href=https://github.com/KelvinTegelaar/RunAsUser>KelvinTegelaar/RunAsUser</a> or create your own system (this is what I choose)</p><h4 id=code-snippet-3>Code snippet</h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-ps1 data-lang=ps1><span style=display:flex><span><span style=color:#75715e># Define function to execute code as logged-on user</span>
 </span></span><span style=display:flex><span><span style=color:#66d9ef>Function</span> Invoke-AsCurrentUser(){
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>param</span>(
-</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>Parameter</span>(<span style=color:#66d9ef>Mandatory</span>=$true, <span style=color:#66d9ef>Position</span>=0)] 
+</span></span><span style=display:flex><span>        [Parameter(<span style=color:#a6e22e>Mandatory</span>=$true, <span style=color:#a6e22e>Position</span>=<span style=color:#ae81ff>0</span>)] 
 </span></span><span style=display:flex><span>        [ValidateNotNullOrEmpty()]
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>[String]</span>$Script
+</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>String</span>]$Script
 </span></span><span style=display:flex><span>    )
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Create random name for task</span>
-</span></span><span style=display:flex><span>    $taskName=<span style=color:#e6db74>&#34;Invoke-AsCurrentUser-</span>$(Get-Random -Maximum 1000)<span style=color:#e6db74>&#34;</span>
+</span></span><span style=display:flex><span>    $taskName=<span style=color:#e6db74>&#34;Invoke-AsCurrentUser-</span>$(Get-Random -Maximum <span style=color:#ae81ff>1000</span>)<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Put code in temp file</span>
-</span></span><span style=display:flex><span>    $Script | Out-File -FilePath <span style=color:#e6db74>&#34;C:\Users\Public\$taskName.ps1&#34;</span>
+</span></span><span style=display:flex><span>    $Script | Out-File -FilePath <span style=color:#e6db74>&#34;C:\Users\Public\</span>$taskName<span style=color:#e6db74>.ps1&#34;</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Define action</span>
-</span></span><span style=display:flex><span>    $action = New-ScheduledTaskAction -Execute <span style=color:#e6db74>&#34;powershell.exe&#34;</span> -Argument <span style=color:#e6db74>&#34;-WindowStyle Hidden -Command &amp;{&amp;(&#39;C:\Users\Public\$taskName.ps1&#39;) ; Remove-Item -Path &#39;C:\Users\Public\$taskName.ps1&#39;}&#34;</span>
+</span></span><span style=display:flex><span>    $action = New-ScheduledTaskAction -Execute <span style=color:#e6db74>&#34;powershell.exe&#34;</span> -Argument <span style=color:#e6db74>&#34;-WindowStyle Hidden -Command &amp;{&amp;(&#39;C:\Users\Public\</span>$taskName<span style=color:#e6db74>.ps1&#39;) ; Remove-Item -Path &#39;C:\Users\Public\</span>$taskName<span style=color:#e6db74>.ps1&#39;}&#34;</span>
 </span></span><span style=display:flex><span>    
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Define trigger to run the task in 1 minute</span>
 </span></span><span style=display:flex><span>    $trigger = New-ScheduledTaskTrigger -AtLogon
@@ -223,7 +223,7 @@ My needs were the folowing:</p><ul><li>Set custom wallpaper</li><li>Customize wa
 </span></span><span style=display:flex><span>    Start-ScheduledTask -TaskName $taskName
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Launch process to remove scheduled task in 5 minutes</span>
-</span></span><span style=display:flex><span>    Start-Process <span style=color:#e6db74>&#34;powershell.exe&#34;</span> <span style=color:#e6db74>&#34;Invoke-Command -ScriptBlock {Start-Sleep -Seconds 300;Unregister-ScheduledTask -TaskName </span><span style=color:#ae81ff>`&#34;</span><span style=color:#e6db74>$taskName</span><span style=color:#ae81ff>`&#34;</span><span style=color:#e6db74> -Confirm:</span><span style=color:#ae81ff>`$</span><span style=color:#e6db74>false};&#34;</span> -WindowStyle Hidden
+</span></span><span style=display:flex><span>    Start-Process <span style=color:#e6db74>&#34;powershell.exe&#34;</span> <span style=color:#e6db74>&#34;Invoke-Command -ScriptBlock {Start-Sleep -Seconds 300;Unregister-ScheduledTask -TaskName </span><span style=color:#ae81ff>`&#34;</span>$taskName<span style=color:#ae81ff>`&#34;</span><span style=color:#e6db74> -Confirm:</span><span style=color:#ae81ff>`$</span><span style=color:#e6db74>false};&#34;</span> -WindowStyle Hidden
 </span></span><span style=display:flex><span>    
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
@@ -231,28 +231,28 @@ My needs were the folowing:</p><ul><li>Set custom wallpaper</li><li>Customize wa
 </span></span><span style=display:flex><span><span style=color:#75715e># Set new theme to current user (run in user context)</span>
 </span></span><span style=display:flex><span>Invoke-AsCurrentUser -Script (
 </span></span><span style=display:flex><span>    
-</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>`$</span><span style=color:#e6db74>THEME_FOLDER=&#39;$THEME_FOLDER&#39;;</span><span style=color:#ae81ff>`$</span><span style=color:#e6db74>THEME_FILENAME=&#39;$THEME_FILENAME&#39;;&#34;</span>+
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>`$</span><span style=color:#e6db74>THEME_FOLDER=&#39;</span>$THEME_FOLDER<span style=color:#e6db74>&#39;;</span><span style=color:#ae81ff>`$</span><span style=color:#e6db74>THEME_FILENAME=&#39;</span>$THEME_FILENAME<span style=color:#e6db74>&#39;;&#34;</span>+
 </span></span><span style=display:flex><span>    
 </span></span><span style=display:flex><span>    ({
 </span></span><span style=display:flex><span>    <span style=color:#75715e>## Set theme file using themecpl.dll &#39;OpenThemeAction&#39; function (https://windows10dll.nirsoft.net/themecpl_dll.html)</span>
-</span></span><span style=display:flex><span>    rundll32.exe themecpl.dll,OpenThemeAction <span style=color:#e6db74>&#34;$THEME_FOLDER\$THEME_FILENAME&#34;</span>
+</span></span><span style=display:flex><span>    rundll32.exe themecpl.dll,OpenThemeAction <span style=color:#e6db74>&#34;</span>$THEME_FOLDER<span style=color:#e6db74>\</span>$THEME_FILENAME<span style=color:#e6db74>&#34;</span>
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e>## Wait for process to start</span>
-</span></span><span style=display:flex><span>    $loop=0
+</span></span><span style=display:flex><span>    $loop=<span style=color:#ae81ff>0</span>
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>While</span>(<span style=color:#e6db74>&#34;</span>$(Get-Process SystemSettings -ErrorAction SilentlyContinue)<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>-eq</span> <span style=color:#e6db74>&#34;&#34;</span>){
-</span></span><span style=display:flex><span>        Start-Sleep -Milliseconds  100
-</span></span><span style=display:flex><span>        $loop=+1
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>If</span>($loop <span style=color:#f92672>-ge</span> 10){
+</span></span><span style=display:flex><span>        Start-Sleep -Milliseconds  <span style=color:#ae81ff>100</span>
+</span></span><span style=display:flex><span>        $loop=<span style=color:#ae81ff>+1</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>If</span>($loop <span style=color:#f92672>-ge</span> <span style=color:#ae81ff>10</span>){
 </span></span><span style=display:flex><span>            <span style=color:#66d9ef>Continue</span>
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    Start-Sleep -Seconds 1
+</span></span><span style=display:flex><span>    Start-Sleep -Seconds <span style=color:#ae81ff>1</span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e>## Close process</span>
-</span></span><span style=display:flex><span>    $loop=0
+</span></span><span style=display:flex><span>    $loop=<span style=color:#ae81ff>0</span>
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>While</span>(<span style=color:#e6db74>&#34;</span>$(Get-Process SystemSettings -ErrorAction SilentlyContinue)<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>-ne</span> <span style=color:#e6db74>&#34;&#34;</span>){
-</span></span><span style=display:flex><span>        Start-Sleep -Milliseconds  100
-</span></span><span style=display:flex><span>        $loop=+1
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>If</span>($loop <span style=color:#f92672>-ge</span> 10){
+</span></span><span style=display:flex><span>        Start-Sleep -Milliseconds  <span style=color:#ae81ff>100</span>
+</span></span><span style=display:flex><span>        $loop=<span style=color:#ae81ff>+1</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>If</span>($loop <span style=color:#f92672>-ge</span> <span style=color:#ae81ff>10</span>){
 </span></span><span style=display:flex><span>            <span style=color:#66d9ef>Continue</span>
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>        Get-Process SystemSettings -ErrorAction SilentlyContinue | Stop-Process -force

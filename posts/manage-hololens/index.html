@@ -87,26 +87,26 @@
 </span></span><span style=display:flex><span>          <span style=color:#a6e22e>Version=</span><span style=color:#e6db74>&#34;1.0.0.0&#34;</span>
 </span></span><span style=display:flex><span>          <span style=color:#a6e22e>ProcessorArchitecture=</span><span style=color:#e6db74>&#34;x86&#34;</span> <span style=color:#f92672>/&gt;</span>
 </span></span></code></pre></div><p><code>Publisher → UTF16 → SHA256 → Take first 40-bits → Encode base32</code></p><p>Powershell script (source : <a href=https://stackoverflow.com/users/13227110/jeroen-de-jong>Jeroen de Jong</a> from <a href=https://stackoverflow.com/questions/21568483/how-to-calculate-publisherid-from-publisher>StackOverflow post</a>):</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-ps1 data-lang=ps1><span style=display:flex><span><span style=color:#66d9ef>Function</span> Get-PublisherIdFromPublisher ($Publisher) {
-</span></span><span style=display:flex><span>    $EncUTF16LE = <span style=color:#66d9ef>[system.Text.Encoding]</span>::Unicode
-</span></span><span style=display:flex><span>    $EncSha256 = <span style=color:#66d9ef>[System.Security.Cryptography.HashAlgorithm]</span>::Create(<span style=color:#e6db74>&#34;SHA256&#34;</span>)
+</span></span><span style=display:flex><span>    $EncUTF16LE = [<span style=color:#66d9ef>system.Text.Encoding</span>]::Unicode
+</span></span><span style=display:flex><span>    $EncSha256 = [<span style=color:#66d9ef>System.Security.Cryptography.HashAlgorithm</span>]::Create(<span style=color:#e6db74>&#34;SHA256&#34;</span>)
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Convert to UTF16 Little Endian</span>
 </span></span><span style=display:flex><span>    $UTF16LE = $EncUTF16LE.GetBytes($Publisher)
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Calculate SHA256 hash on UTF16LE Byte array. Store first 8 bytes in new Byte Array</span>
 </span></span><span style=display:flex><span>    $Bytes = @()
-</span></span><span style=display:flex><span>    (($EncSha256.ComputeHasH($UTF16LE))[0..7]) | % { $Bytes += <span style=color:#e6db74>&#39;{0:x2}&#39;</span> <span style=color:#f92672>-f</span> $_ }
+</span></span><span style=display:flex><span>    (($EncSha256.ComputeHasH($UTF16LE))[<span style=color:#ae81ff>0</span>.<span style=color:#ae81ff>.7</span>]) | % { $Bytes += <span style=color:#e6db74>&#39;{0:x2}&#39;</span> <span style=color:#f92672>-f</span> $_ }
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Convert Byte Array to Binary string; Adding padding zeros on end to it has 13*5 bytes</span>
-</span></span><span style=display:flex><span>    $BytesAsBinaryString = -join $Bytes.<span style=color:#66d9ef>ForEach</span>{ <span style=color:#66d9ef>[convert]</span>::tostring(<span style=color:#66d9ef>[convert]</span>::ToByte($_,16),2).padleft(8,<span style=color:#e6db74>&#39;0&#39;</span>) }
-</span></span><span style=display:flex><span>    $BytesAsBinaryString = $BytesAsBinaryString.PadRight(65,<span style=color:#e6db74>&#39;0&#39;</span>)
+</span></span><span style=display:flex><span>    $BytesAsBinaryString = -join $Bytes.<span style=color:#66d9ef>ForEach</span>{ [<span style=color:#66d9ef>convert</span>]::tostring([<span style=color:#66d9ef>convert</span>]::ToByte($_,<span style=color:#ae81ff>16</span>),<span style=color:#ae81ff>2</span>).padleft(<span style=color:#ae81ff>8</span>,<span style=color:#e6db74>&#39;0&#39;</span>) }
+</span></span><span style=display:flex><span>    $BytesAsBinaryString = $BytesAsBinaryString.PadRight(<span style=color:#ae81ff>65</span>,<span style=color:#e6db74>&#39;0&#39;</span>)
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#75715e># Crockford Base32 encode. Read each 5 bits; convert to decimal. Lookup position in lookup table</span>
 </span></span><span style=display:flex><span>    $Coded = $null
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>For</span> ($i=0;$i <span style=color:#f92672>-lt</span> (($BytesAsBinaryString.Length)); $i+=5) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>For</span> ($i=<span style=color:#ae81ff>0</span>;$i <span style=color:#f92672>-lt</span> (($BytesAsBinaryString.Length)); $i+=<span style=color:#ae81ff>5</span>) {
 </span></span><span style=display:flex><span>        $String = <span style=color:#e6db74>&#34;0123456789ABCDEFGHJKMNPQRSTVWXYZ&#34;</span>
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>[int]</span>$Int = <span style=color:#66d9ef>[convert]</span>::Toint32($BytesAsBinaryString.Substring($i,5),2)
-</span></span><span style=display:flex><span>        $Coded += $String.Substring($Int,1)
+</span></span><span style=display:flex><span>        [<span style=color:#66d9ef>int</span>]$Int = [<span style=color:#66d9ef>convert</span>]::Toint32($BytesAsBinaryString.Substring($i,<span style=color:#ae81ff>5</span>),<span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span>        $Coded += $String.Substring($Int,<span style=color:#ae81ff>1</span>)
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>Return</span> $Coded.tolower()
 </span></span><span style=display:flex><span>}
