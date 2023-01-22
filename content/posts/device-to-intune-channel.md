@@ -4,7 +4,7 @@ date: 2023-01-09
 lastmod: 2023-01-09
 draft: true
 tags: ["device-management", "windows", ""]
-summary:  "Create a secure channel for Windows, macOS and Linux script to perform actions and store data to Intune using Azure Functions"
+summary:  "Create a secure channel for Windows and macOS script to perform actions and store data to Intune using Azure Functions"
 image: "/posts/device-to-intune-channel/_header.png"
 ogimage: "/posts/device-to-intune-channel/_og.png"
 ---
@@ -344,20 +344,6 @@ Try {
 $response.password
 ```
 
-### Linux
-
-#### Set password
-
-```sh
-#TODO
-```
-
-#### Get password
-
-```sh
-#TODO
-```
-
 ### macOS
 
 #### Set password
@@ -371,6 +357,8 @@ $response.password
 ```sh
 #TODO
 ```
+
+Note: macOS scripts can be reuse (with some changes) for Linux when Intune will include script execution for this OS.
 
 ## Sources / usefull resources
 * https://developer.android.com/studio/command-line/logcat
