@@ -219,15 +219,21 @@ article h2, article h3, article h4, article h5, article h6{
 
 article:not(.preview) h2 a, article:not(.preview) h3 a, article:not(.preview) h4 a, article:not(.preview) h5 a, article:not(.preview) h6 a{
     position: absolute;
-    top: 15%;
+    top: calc(50% - 12px);;
     left: 0;
 
     display: none;
 }
 
 
-article h2:hover a, article h3:hover a, article h4:hover a, article h5:hover a, article h6:hover a{
+article:not(.preview) h2:hover a, article:not(.preview) h3:hover a, article:not(.preview) h4:hover a, article:not(.preview) h5:hover a, article:not(.preview) h6:hover a{
     display: inline-block;
+}
+
+@media only screen and (max-width: 900px){
+    article:not(.preview) h2 a, article:not(.preview) h3 a, article:not(.preview) h4 a, article:not(.preview) h5 a, article:not(.preview) h6 a{
+        display: inline-block;
+    }
 }
 
 
