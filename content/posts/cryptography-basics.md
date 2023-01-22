@@ -111,7 +111,6 @@ Digital signature (e.g. [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)))
 2. In this example, nothing is encrypted and so Eve can read everything
 3. Bob has to make sure that {{<  mathjax/inline `K_{pub}^{Alice}` >}} is really owned by Alice and not by Mallory
 
-
 ## Protocols
 
 Cryptographic protocols (e.g. [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) wrapp-up all the above systems to create secured and authenticated channel, they have to prevent the following attacks types (not exhaustive):

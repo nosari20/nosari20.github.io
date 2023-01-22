@@ -6,9 +6,18 @@
     <description>Recent content in misc on Nosari20</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 31 Aug 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://nosari20.github.io/tags/misc/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 13 Dec 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://nosari20.github.io/tags/misc/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Get Intune data in PowerBI</title>
+      <title>Cryptography basics</title>
+      <link>https://nosari20.github.io/posts/cryptography-basics/</link>
+      <pubDate>Tue, 13 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/posts/cryptography-basics/</guid>
+      <description>How can Alice send data to Bob securely?</description>
+    </item>
+    
+    <item>
+      <title>Get Intune data with PowerBI</title>
       <link>https://nosari20.github.io/posts/intune-powerbi/</link>
       <pubDate>Wed, 31 Aug 2022 00:00:00 +0000</pubDate>
       

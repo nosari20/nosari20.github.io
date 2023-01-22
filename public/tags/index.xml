@@ -6,31 +6,67 @@
     <description>Recent content in Tags on Nosari20</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 04 Sep 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://nosari20.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 13 Dec 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://nosari20.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>cryptography</title>
+      <link>https://nosari20.github.io/tags/cryptography/</link>
+      <pubDate>Tue, 13 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/tags/cryptography/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>misc</title>
+      <link>https://nosari20.github.io/tags/misc/</link>
+      <pubDate>Tue, 13 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/tags/misc/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>security</title>
+      <link>https://nosari20.github.io/tags/security/</link>
+      <pubDate>Tue, 13 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/tags/security/</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>device-management</title>
       <link>https://nosari20.github.io/tags/device-management/</link>
-      <pubDate>Sun, 04 Sep 2022 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 05 Nov 2022 00:00:00 +0000</pubDate>
       
       <guid>https://nosari20.github.io/tags/device-management/</guid>
       <description></description>
     </item>
     
     <item>
-      <title>powershell</title>
-      <link>https://nosari20.github.io/tags/powershell/</link>
-      <pubDate>Sun, 04 Sep 2022 00:00:00 +0000</pubDate>
+      <title>hololens</title>
+      <link>https://nosari20.github.io/tags/hololens/</link>
+      <pubDate>Sat, 05 Nov 2022 00:00:00 +0000</pubDate>
       
-      <guid>https://nosari20.github.io/tags/powershell/</guid>
+      <guid>https://nosari20.github.io/tags/hololens/</guid>
       <description></description>
     </item>
     
     <item>
       <title>windows</title>
       <link>https://nosari20.github.io/tags/windows/</link>
-      <pubDate>Sun, 04 Sep 2022 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 05 Nov 2022 00:00:00 +0000</pubDate>
       
       <guid>https://nosari20.github.io/tags/windows/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>powershell</title>
+      <link>https://nosari20.github.io/tags/powershell/</link>
+      <pubDate>Tue, 13 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://nosari20.github.io/tags/powershell/</guid>
       <description></description>
     </item>
     
@@ -58,15 +94,6 @@
       <pubDate>Wed, 31 Aug 2022 00:00:00 +0000</pubDate>
       
       <guid>https://nosari20.github.io/tags/dev-scripting/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>misc</title>
-      <link>https://nosari20.github.io/tags/misc/</link>
-      <pubDate>Wed, 31 Aug 2022 00:00:00 +0000</pubDate>
-      
-      <guid>https://nosari20.github.io/tags/misc/</guid>
       <description></description>
     </item>
     
