@@ -1,7 +1,7 @@
 ---
 title: "Android Enterprise Device Owner ADB provisioning"
 date: 2022-09-02
-lastmod: 2022-09-02
+lastmod: 2023-01-24
 draft: false
 tags: ["device-management", "android", "android-enterprise"]
 summary:  "How to provision Device Owner using ADB?"
@@ -37,7 +37,7 @@ adb shell dpm set-device-owner <PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME>
 | MobileIron Cloud       | com.mobileiron.anyware.android/com.mobileiron.polaris.manager.device.AndroidDeviceAdminReceiver  |
 | MobileIron Core        | com.mobileiron/com.mobileiron.receiver.MIDeviceAdmin                                             |
 | VMware Workspace ONE   | com.airwatch.androidagent/com.airwatch.agent.DeviceAdministratorReceiver                         |
-| Android Management API | com.google.android.apps.work.clouddpc/.receivers.CloudDeviceAdminReceiver                        |
+| Android Management API | com.google.android.apps.work.clouddpc/.receivers.CloudDeviceAdminReceiver (seems to not work)    |
 | Cisco Meraki           | com.meraki.sm/.DeviceAdmin                                                                       |
 | Test DPC               | com.afwsamples.testdpc/.DeviceAdminReceiver                                                      |
 
