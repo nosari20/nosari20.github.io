@@ -7,6 +7,7 @@ tags: ["device-management", "windows", "intune","azure","android","macos"]
 summary: "Create a secure channel for scripts and apps to perform actions and store data to EMM using Azure Functions"
 image: "/posts/device-to-intune-channel/_header.png"
 ogimage: "/posts/device-to-intune-channel/_og.png"
+githubissueID: "7" 
 ---
 
 
