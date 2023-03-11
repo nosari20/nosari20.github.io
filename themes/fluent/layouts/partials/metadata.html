@@ -1,6 +1,6 @@
 {{ $dateFormat := .Site.Params.dateFormat | default "Jan 2, 2006" }}
 {{ $pubDateTime := .PublishDate.Format "2006-01-02" }}
-Published on: <time datetime="{{ $pubDateTime }}"itemprop="datePublished">{{ .PublishDate.Format $dateFormat }}</time>
+Published on: <time datetime="{{ $pubDateTime }}">{{ .PublishDate.Format $dateFormat }}</time>
 
 {{ if .Params.LastMod }}
     {{ $updateTime := .Params.LastMod.Format "2006-01-02" }}
