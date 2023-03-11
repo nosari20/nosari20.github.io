@@ -98,4 +98,4 @@ Note: use your own certificate
 {{% include "/static/posts/device-to-intune-channel/code/Clients/Android/Set-Note.kt" %}}
 ```
 
-Note: macOS scripts can be reuse (with some changes) for Linux when Intune will include script execution for this OS.
+Note: macOS scripts will be reuseable (with some changes) for Linux when Intune will include script execution for this OS.
