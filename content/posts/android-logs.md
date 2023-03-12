@@ -68,6 +68,14 @@ adb logcat -v threadtime > android.log
 Logs are now all store in `android.log`
 
 
+### Usefull logact filters
+
+| Purpose                | Command                                                     |
+|------------------------|-------------------------------------------------------------|
+| Specific app           | adb logcat --pid=$(adb shell "pidof <PACKAGE_NAME>")        |
+| Wi-FI                  | adb logcat -s wpa_supplicant                                |
+
+
 
 ## Bug report
 
