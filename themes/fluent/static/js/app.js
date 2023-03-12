@@ -1,3 +1,8 @@
+var html = document.getElementsByTagName('html')[0];
+if (navigator.userAgent.match(/(iPad|iPhone|iPod)/i)) html.classList.add('device-ios');
+if (navigator.userAgent.match(/android/i)) html.classList.add('device-android');
+
+
 document.getElementById('nav-toggle').addEventListener('click',function(e){
     document.querySelector('nav').classList.toggle('visible') 
 })
