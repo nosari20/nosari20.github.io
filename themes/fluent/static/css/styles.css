@@ -242,6 +242,8 @@ article h3,  article h1{
     margin-bottom: 0px;
 
     color: grey;
+
+    font-weight: normal;
 }
 
 article h3 a, article h1 a{
