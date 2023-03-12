@@ -411,7 +411,7 @@ article .caption{
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) { 
-    body, h1 {
+    body, h1, h2, h3, h4, h5 {
         color: #d3d3d3 !important;
     }
 
