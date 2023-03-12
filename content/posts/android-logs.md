@@ -73,7 +73,7 @@ Logs are now all store in `android.log`
 | Purpose                | Command                                                     |
 |------------------------|-------------------------------------------------------------|
 | Specific app           | ``adb logcat --pid=$(adb shell pidof "<PACKAGE_NAME>")``    |
-| Wi-Fi                  |  ``adb logcat -s wpa_supplicant ``                          |
+| Wi-Fi                  | ``adb logcat -s wpa_supplicant ``                           |
 
 
 
