@@ -436,5 +436,13 @@ article .caption{
     article a {
         color: inherit;
     }
+
+    article table thead {
+        background: #565656;
+    }
+    
+    article table tbody tr:nth-child(even){
+        background-color: #ffffff08;;
+    }
 }
 

@@ -1,7 +1,7 @@
 ---
 title: "Android Logging guide"
 date: 2022-09-01
-lastmod: 2022-09-01
+lastmod: 2023-04-08
 draft: false
 tags: ["device-management", "android"]
 summary:  "Fantastic logs and where to find them"
@@ -73,7 +73,8 @@ Logs are now all store in `android.log`
 | Purpose                | Command                                                     |
 |------------------------|-------------------------------------------------------------|
 | Specific app           | ``adb logcat --pid=$(adb shell pidof "<PACKAGE_NAME>")``    |
-| Wi-Fi                  | ``adb logcat -s wpa_supplicant ``                           |
+| Wi-Fi                  | ``adb logcat -s wpa_supplicant``                           |
+| Auth                   | ``adb logcat -s Auth``                           |
 
 
 
