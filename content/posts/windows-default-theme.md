@@ -3,7 +3,7 @@ title: "Customize Windows 10+ default theme"
 date: 2022-09-13
 lastmod: 2022-09-14
 draft: false
-tags: ["device-management", "windows", "powershell"]
+tags: ["device-management", "windows", "powershell", "dev-scripting"]
 summary:  "Customize the Windows 10+ default theme using PowerShell script (wallpaper, lockscreen, etc.)"
 image: "/posts/windows-default-theme/_header.png"
 ogimage: "/posts/windows-default-theme/_og.png"
@@ -17,7 +17,7 @@ githubissueID: "1"
 
 ## Purpose
 
-One day, I wanted to change the default wallpaper and lockscreen of Windows compters for all the user profiles and let the users change these settings as they want. I find different ways by browsing Internet but they did not answere all my needs.
+One day, I wanted to change the default wallpaper and lockscreen of Windows computers for all the user profiles and let the users change these settings as they want. I find different ways by browsing Internet but they did not answere all my needs.
 My needs were the folowing:
 * Set custom wallpaper
 * Customize wallpaper screen

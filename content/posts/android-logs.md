@@ -35,9 +35,9 @@ ADB logs look like the following example:
 {{< rawhtml >}}
 <div>
   <img alt="Tap build number" src="/posts/android-logs/build-number.png" style="width: 24%">
-  <img alt="Enable usb debugging" src="/posts/android-logs/dev-options.png" style="width: 24%">
+  <img alt="Enable dev options" src="/posts/android-logs/dev-options.png" style="width: 24%">
   <img alt="Enable usb debugging" src="/posts/android-logs/debug-mode.png" style="width: 24%">
-  <img alt="Allow usb debugginh" src="/posts/android-logs/allow-usb-debugging.png" style="width: 24%">
+  <img alt="Allow usb debugging" src="/posts/android-logs/allow-usb-debugging.png" style="width: 24%">
 </div>
 {{< /rawhtml >}}
 

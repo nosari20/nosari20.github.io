@@ -1,9 +1,9 @@
 ---
 title: "Device to EMM secure channel using Azure Function"
 date: 2023-03-11
-lastmod: 2023-03-11
+lastmod: 2024-01-26
 draft: false
-tags: ["device-management", "windows", "intune","azure","android","macos"]
+tags: ["device-management", "windows", "intune","azure","android","macos", "dev-scripting"]
 summary: "Create a secure channel for scripts and apps to perform actions and store data to EMM using Azure Functions"
 image: "/posts/device-to-intune-channel/_header.png"
 ogimage: "/posts/device-to-intune-channel/_og.png"
@@ -81,6 +81,8 @@ The file ``run.ps1`` which is the main code is the following:
 ### macOS
 
 Important: at the moment, I have not found a solution to allow a specific app to use a private key using a script or a profile, so a pop-up will appear at first run to allow ``curl`` to use the private key. Alternatively, you can push your own certificate and allow all apps to use it.
+
+Update 1/26/2024: Here is a full example in [another post]({{< ref "/posts/device-to-intune-channel" >}})
 
 #### Set MDM profile to notes
 

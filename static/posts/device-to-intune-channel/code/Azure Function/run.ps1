@@ -101,7 +101,7 @@ Function Set-Note($IntuneDeviceID,$Note) {
 Function Get-GraphAPIToken() {
     
     $ApplicationID = "<APP_ID>"
-    $TenantID = "<TENANT_ID"
+    $TenantID = "<TENANT_ID>"
     $AccessSecret = "<SECRET>"
 
 

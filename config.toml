@@ -3,6 +3,7 @@ languageCode = "en-us"
 title = "Nosari20"
 theme = "fluent"
 enableGitInfo = true
+pygmentsOptions="linenos=table"
 
 [params]
   description = "IT worker sharing IT things."
