@@ -338,6 +338,15 @@ article .highlight{
     font-size: 0.9rem;
 }
 
+article .highlight table {
+    overflow: overlay;
+    display: block;
+}
+
+article .highlight table td {
+    min-width: unset;
+}
+
 article .highlight pre{
     background: transparent !important;
 }
