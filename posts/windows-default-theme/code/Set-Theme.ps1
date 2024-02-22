@@ -48,7 +48,7 @@ Function Invoke-AsCurrentUser(){
     $trigger = New-ScheduledTaskTrigger -AtLogon
 
     # Define targeted user
-    $principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance –ClassName Win32_ComputerSystem | Select-Object -expand UserName)
+    $principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -expand UserName)
     
 
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
