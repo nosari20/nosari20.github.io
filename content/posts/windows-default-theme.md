@@ -303,6 +303,7 @@ This code must be run in the user context, you can use [KelvinTegelaar/RunAsUser
 
 ```ps1
 # Define function to execute code as logged-on user
+# Define function to execute code as logged-on user
 Function Invoke-AsCurrentUser(){
     param(
         [Parameter(Mandatory=$true, Position=0)] 
@@ -317,13 +318,13 @@ Function Invoke-AsCurrentUser(){
     $Script | Out-File -FilePath "C:\Users\Public\$taskName.ps1"
 
     # Define action
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -Command &{&('C:\Users\Public\$taskName.ps1') ; Remove-Item -Path 'C:\Users\Public\$taskName.ps1'}"
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -Command `"&{&('C:\Users\Public\$taskName.ps1') }`""
     
     # Define trigger to run the task in 1 minute
     $trigger = New-ScheduledTaskTrigger -AtLogon
 
     # Define targeted user
-    $principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance –ClassName Win32_ComputerSystem | Select-Object -expand UserName)
+    $principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -expand UserName)
     
 
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
@@ -338,7 +339,7 @@ Function Invoke-AsCurrentUser(){
     Start-ScheduledTask -TaskName $taskName
 
     # Launch process to remove scheduled task in 5 minutes
-    Start-Process "powershell.exe" "Invoke-Command -ScriptBlock {Start-Sleep -Seconds 300;Unregister-ScheduledTask -TaskName `"$taskName`" -Confirm:`$false};" -WindowStyle Hidden
+    Start-Process "powershell.exe" "Invoke-Command -ScriptBlock {Start-Sleep -Seconds 300;Unregister-ScheduledTask -TaskName `"$taskName`" -Confirm:`$false}" -WindowStyle Hidden
     
 }
 
@@ -357,20 +358,23 @@ Invoke-AsCurrentUser -Script (
     While("$(Get-Process SystemSettings -ErrorAction SilentlyContinue)" -eq ""){
         Start-Sleep -Milliseconds  100
         $loop=+1
-        If($loop -ge 10){
-            Continue
+        If($loop -ge 50){
+            Break
         }
     }
     Start-Sleep -Seconds 1
+
     ## Close process
-    $loop=0
-    While("$(Get-Process SystemSettings -ErrorAction SilentlyContinue)" -ne ""){
-        Start-Sleep -Milliseconds  100
-        $loop=+1
-        If($loop -ge 10){
-            Continue
+    Start-Job {
+        $loop=0
+        While("$(Get-Process SystemSettings -ErrorAction SilentlyContinue)" -ne ""){
+            Start-Sleep -Milliseconds  100
+            $loop=+1
+            If($loop -ge 50){
+                Break
+            }
+            Get-Process SystemSettings -ErrorAction SilentlyContinue | Stop-Process -force
         }
-        Get-Process SystemSettings -ErrorAction SilentlyContinue | Stop-Process -force
     }
 }).toString())
 ```
