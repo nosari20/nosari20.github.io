@@ -96,7 +96,7 @@ Function Get-UserID($UPN) {
     $Bearer = Get-GraphAPIToken
 
     # Get data
-    $Url = "https://graph.microsoft.com/v1.0/users/$UPN"
+    $url = "https://graph.microsoft.com/beta/users('$UPN')?`$select=displayName"
     Try {
         
         $UserData = (Invoke-RestMethod -Method 'GET' -Headers @{Authorization = "Bearer $($Bearer)"} -Uri $Url)
