@@ -124,7 +124,7 @@ adb bugreport
 ### How to generate a bug report from device settings app
 
 1. Turn on developer settings 
-2. Tap `Take bug report` then `Full report` and finnaly `Report`
+2. Tap `Bug report` then `Full report` and finnaly `Report`
 
 {{< rawhtml >}}
 <div>
