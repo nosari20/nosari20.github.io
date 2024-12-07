@@ -152,11 +152,13 @@ html.device-android section {
 }
 
 section header{
+    display: flex;
+    flex-direction: row;
     position: fixed;
     z-index: 1;
     top: 15px;
 
-    width: calc(100% + 30px);
+    width: calc(100% - 250px);
     height: 50px;
 
     margin: -15px -15px 15px -15px;
@@ -164,13 +166,22 @@ section header{
    
     background: #302F2A;
 
+    line-height: 26px;
     color: white;
+
+
+}
+
+section header span {
+    flex: 1
 }
 
 @media only screen and (max-width: 900px){
 
     section header{
         padding-left: 60px;
+        padding-right: 10px;
+        width: calc(100% + 20px);
     }
    
 

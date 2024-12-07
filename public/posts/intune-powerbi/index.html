@@ -15,7 +15,7 @@
 
 
 
-<head>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   
@@ -26,24 +26,33 @@
     <meta name="google-site-verification" content="l3oU_IprnsBv0fmr4tY7n9XdxnmZ0oum0x1GeGe5hkI" />
   
      
-    <meta property="og:url" content="https://nosari20.github.io">
-    <meta property="og:type" content="article">
+    <meta property="og:url" content="http://localhost:1313//posts/intune-powerbi/">
     <meta property="og:title" content="Get Intune data with PowerBI | Nosari20">
+    <meta property="og:author" content="Florent NOSARI">
     <meta property="og:description" content="How to get Intune data from PowerBI report?">
-    <meta property="og:image" content="https://nosari20.github.io/posts/intune-powerbi/_og.png">
+    <meta property="og:image" content="http://localhost:1313//posts/intune-powerbi/_og.png">
+    
+    
+    <meta property="og:article:published_time" content="2022-08-31 00:00:00 &#43;0000 UTC">
+    <meta property="og:article:modified_time" content="2022-09-01 00:00:00 &#43;0000 UTC">
+    
 
+    <meta property="og:type" content="article">
+
+
+  
     
     <meta name="twitter:card" content="summary_large_image">
     <meta property="twitter:domain" content="nosari20.github.io">
-    <meta property="twitter:url" content="https://nosari20.github.io">
+    <meta property="twitter:url" content="http://localhost:1313//posts/intune-powerbi/">
     <meta name="twitter:title" content="Get Intune data with PowerBI | Nosari20">
     <meta name="twitter:description" content="How to get Intune data from PowerBI report?">
-    <meta name="twitter:image" content="https://nosari20.github.io/posts/intune-powerbi/_og.png">
+    <meta name="twitter:image" content="http://localhost:1313//posts/intune-powerbi/_og.png">
 
     <meta name="theme-color" content="#302F2A" />
     <link rel="icon" href="/images/favicon.png">
   
-    <link rel="stylesheet" href="/css/styles.css?v=2.0">
+    <link rel="stylesheet" href="/css/styles.css?v=2.1">
     <link rel="stylesheet" href="/css/print.css?v=1.0" media="print"></head><body><nav>
     <div id="nav-toggle"><svg width="24" height="24" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 17h18a1 1 0 0 1 .117 1.993L21 19H3a1 1 0 0 1-.117-1.993L3 17h18H3Zm0-6 18-.002a1 1 0 0 1 .117 1.993l-.117.007L3 13a1 1 0 0 1-.117-1.993L3 11l18-.002L3 11Zm0-6h18a1 1 0 0 1 .117 1.993L21 7H3a1 1 0 0 1-.117-1.993L3 5h18H3Z" fill="#ffffff"/></svg></div>
     
@@ -87,7 +96,7 @@
             Misc.
         </a>
     <footer>
-    <p class="footer text-center">Copyright (©) 2022 Florent NOSARI</p>
+    <p class="footer text-center">Copyright (©) 2024 Florent NOSARI</p>
 </footer></nav><section><header>
     Nosari20
 </header>
@@ -104,19 +113,19 @@ Published on: <time datetime="2022-08-31">Aug 31, 2022</time>
     - Last update: <time datetime="2022-09-01">Sep 1, 2022</time>
 
 
-<div class="meta-url">Url: https://nosari20.github.io/posts/intune-powerbi/ </div>
+<div class="meta-url">Url: http://localhost:1313/posts/intune-powerbi/ </div>
 
 <ul class="tags">
 
     
         
-        <li><a href="https://nosari20.github.io/tags/device-management">device-management</a></li>
+        <li><a href="http://localhost:1313/tags/device-management">device-management</a></li>
         
         
-        <li><a href="https://nosari20.github.io/tags/dev-scripting">dev-scripting</a></li>
+        <li><a href="http://localhost:1313/tags/dev-scripting">dev-scripting</a></li>
         
         
-        <li><a href="https://nosari20.github.io/tags/misc">misc</a></li>
+        <li><a href="http://localhost:1313/tags/misc">misc</a></li>
         
     
 </ul>
@@ -167,7 +176,38 @@ Published on: <time datetime="2022-08-31">Aug 31, 2022</time>
 <ol start="3">
 <li>Use the following code</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>let
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>let
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Step 1: Get OAuth token
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    token_uri <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;https://login.windows.net/&#34;</span> <span style="color:#f92672">&amp;</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#e6db74">&#34;Directory ID&#34;</span> <span style="color:#f92672">&amp;</span> <span style="color:#e6db74">&#34;/oauth2/token&#34;</span>,
 </span></span><span style="display:flex;"><span>    resource<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://graph.microsoft.com&#34;</span>,
@@ -194,7 +234,9 @@ Published on: <time datetime="2022-08-31">Aug 31, 2022</time>
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Result <span style="color:#f92672">=</span> Table.FromRecords(GetJson[value])
 </span></span><span style="display:flex;"><span>in
 </span></span><span style="display:flex;"><span>    Result
-</span></span></code></pre></div><ol start="4">
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="4">
 <li>Create managed parameters for <code>Directory ID</code>, <code>Client ID</code> and <code>Client Secret</code></li>
 </ol>
 <p><img src="/posts/intune-powerbi/create-new-parameter-1.png" alt="Create new parameter - step 1"></p>
@@ -295,7 +337,7 @@ Published on: <time datetime="2022-08-31">Aug 31, 2022</time>
         </section>
 
 
-        <script src="/js/app.js"></script>
+        <script src="/js/app.js?v=1.0"></script>
         
     </body>
 </html>
