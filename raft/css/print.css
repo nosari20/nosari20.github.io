@@ -1,0 +1,17 @@
+.highlight * {
+    white-space: pre-wrap;
+}
+
+nav, header, #comments {
+    display: none;
+}
+
+section {
+    padding: 0;
+    height: auto;
+}
+
+section article{
+    box-shadow: none !important;
+    margin: 0;
+}
