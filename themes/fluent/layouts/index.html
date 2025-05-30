@@ -1,5 +1,5 @@
 {{ define "main" }}
-  {{ range .Site.RegularPages.ByPublishDate.Reverse }}
+  {{ range where .Site.RegularPages.ByPublishDate.Reverse "Params.hidden" "ne" true}}
     <article class="preview">
       <image class="image-header" alt="{{ .Title }}" src="{{ .Params.Image }}"/>
       <h3><a class="title" href="{{ .RelPermalink }}">{{ .Title }}</a></h3>

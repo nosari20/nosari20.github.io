@@ -6,8 +6,15 @@
     <description>Recent content on Nosari20</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 29 May 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 30 May 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Class Lock - Privacy Policy</title>
+      <link>http://localhost:1313/posts/privacy-policy-class-lock/</link>
+      <pubDate>Fri, 30 May 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/privacy-policy-class-lock/</guid>
+      <description>Class Lock - Privacy Policy</description>
+    </item>
     <item>
       <title>Leverage Android Enterprise delegation scopes</title>
       <link>http://localhost:1313/posts/android-dpc-delegation/</link>
