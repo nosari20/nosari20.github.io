@@ -73,7 +73,7 @@ On the app, when user clicks on the switch input, it reads the app restrictions 
 </div>
 {{< /rawhtml >}}
 
-Here is sample code to set app restrictions as explained:
+Bellow, sample code to set app restrictions as explained:
 
 ```kt
 
@@ -158,7 +158,7 @@ You can find my fully functionnal app that leverage app config to setup mapping 
 </div>
 {{< /rawhtml >}}
 
-Here his sample code to do it:
+Bellow, sample code to do it:
 
 
 ```kotlin
