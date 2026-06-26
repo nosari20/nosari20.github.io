@@ -31,7 +31,7 @@ jobs:
           AJAR="$ANDROID_SDK_ROOT/platforms/android-34/android.jar"
           D8="$ANDROID_SDK_ROOT/build-tools/34.0.0/d8"
           javac --release 11 -cp "$AJAR" -d build-classes static/webadb/applist-src/Main.java
-          "$D8" build-classes/Main.class --lib "$AJAR" --min-api 24 --output static/webadb/
+          "$D8" build-classes/*.class --lib "$AJAR" --min-api 24 --output static/webadb/
           mv static/webadb/classes.dex static/webadb/applist.dex
           ls -l static/webadb/applist.dex
 

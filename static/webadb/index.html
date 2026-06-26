@@ -25,10 +25,14 @@
 
       <div class="nav-section">Management</div>
       <button class="nav-item" data-view="mgmt-overview" disabled><span class="ico">🛡️</span> Overview</button>
+      <button class="nav-item" data-view="mgmt-effective" disabled><span class="ico">🎯</span> Effective</button>
       <button class="nav-item" data-view="mgmt-security" disabled><span class="ico">🔒</span> Security</button>
       <button class="nav-item" data-view="mgmt-policies" disabled><span class="ico">📜</span> Policies</button>
       <button class="nav-item" data-view="mgmt-apppolicies" disabled><span class="ico">📋</span> App policies</button>
       <button class="nav-item" data-view="mgmt-appconfig" disabled><span class="ico">⚙️</span> App config</button>
+      <button class="nav-item" data-view="mgmt-certs" disabled><span class="ico">🔑</span> Certificates</button>
+      <button class="nav-item" data-view="mgmt-network" disabled><span class="ico">🌐</span> Accounts &amp; network</button>
+      <button class="nav-item" data-view="mgmt-diag" disabled><span class="ico">🧰</span> Diagnostics</button>
       <button class="nav-item" data-view="mgmt-raw" disabled><span class="ico">🗒️</span> Raw dumps</button>
 
        <div class="nav-section">Manage</div>
@@ -89,6 +93,49 @@
           <span class="muted mgmt-status"></span>
         </div>
         <div id="mgmtSecurity"></div>
+      </div>
+
+      <!-- Management: Effective (configured vs resolved) -->
+      <div id="view-mgmt-effective" class="view">
+        <h2>Management — Effective policy</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <label class="inline"><input id="effOnlyIssues" type="checkbox" /> only not-applied / conflicts</label>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtEffective"></div>
+      </div>
+
+      <!-- Management: Certificates -->
+      <div id="view-mgmt-certs" class="view">
+        <h2>Management — Certificates</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtCerts"></div>
+      </div>
+
+      <!-- Management: Accounts & network -->
+      <div id="view-mgmt-network" class="view">
+        <h2>Management — Accounts &amp; network</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtNetwork"></div>
+      </div>
+
+      <!-- Management: Diagnostics -->
+      <div id="view-mgmt-diag" class="view">
+        <h2>Management — Diagnostics</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <button id="diagLogcat" class="btn outline">Logcat → filter to DPC</button>
+          <button id="diagExport" class="btn">Export diagnostic report</button>
+          <span id="diagStatus" class="muted"></span>
+        </div>
+        <div id="mgmtDiag"></div>
       </div>
 
       <!-- Management: Policies -->
@@ -266,6 +313,17 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- App detail modal -->
+  <div id="appModal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <span id="appModalTitle" class="modal-title"></span>
+        <button id="appModalClose" class="icon-btn" title="Close (Esc)">✕</button>
+      </div>
+      <div id="appModalBody" class="modal-body"></div>
+    </div>
   </div>
 
   <script type="module" src="./app.js"></script>
