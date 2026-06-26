@@ -6,16 +6,67 @@ on:
     branches:
       - main  # Set a branch to deploy
   pull_request:
-  
+
 
 jobs:
-  deploy:
+  # Produce the gitignored WebADB binary assets (app-list dex + scrcpy server)
+  # and pass them to the deploy job as an artifact.
+  webadb-assets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build applist.dex
+        run: |
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+          AJAR="$ANDROID_SDK_ROOT/platforms/android-34/android.jar"
+          D8="$ANDROID_SDK_ROOT/build-tools/34.0.0/d8"
+          javac --release 11 -cp "$AJAR" -d build-classes static/webadb/applist-src/Main.java
+          "$D8" build-classes/Main.class --lib "$AJAR" --min-api 24 --output static/webadb/
+          mv static/webadb/classes.dex static/webadb/applist.dex
+          ls -l static/webadb/applist.dex
+
+      # Must match SCRCPY_VERSION in static/webadb/app.js.
+      - name: Fetch scrcpy server
+        env:
+          SCRCPY_VERSION: '3.3.3'
+        run: |
+          curl -fsSL -o static/webadb/scrcpy-server \
+            "https://github.com/Genymobile/scrcpy/releases/download/v${SCRCPY_VERSION}/scrcpy-server-v${SCRCPY_VERSION}"
+          ls -l static/webadb/scrcpy-server
+
+      - name: Upload WebADB assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: webadb-assets
+          path: |
+            static/webadb/applist.dex
+            static/webadb/scrcpy-server
+          if-no-files-found: error
+
+  deploy:
+    needs: webadb-assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
           submodules: true  # Fetch Hugo themes (true OR recursive)
           fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
+
+      - name: Download WebADB assets
+        uses: actions/download-artifact@v4
+        with:
+          name: webadb-assets
+          path: static/webadb/
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2

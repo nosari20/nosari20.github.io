@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WebADB — Android tool</title>
+  <link rel="stylesheet" href="./xterm.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="app-bar">
+    <span class="brand"><span id="statusDot" class="dot"></span> WebADB</span>
+    <span class="spacer"></span>
+    <span id="status" class="conn-status">Not connected</span>
+    <button id="themeToggle" class="icon-btn" title="Toggle dark / light" aria-label="Toggle theme">🌙</button>
+    <button id="connect" class="btn">Connect</button>
+    <button id="disconnect" class="btn outline" disabled>Disconnect</button>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="nav-section">Device</div>
+      <button class="nav-item active" data-view="device" disabled><span class="ico">📱</span> Device info</button>
+      <button class="nav-item" data-view="scrcpy" disabled><span class="ico">🖥️</span> Screen mirror</button>
+
+       <div class="nav-section">Manage</div>
+      <button class="nav-item" data-view="files" disabled><span class="ico">📁</span> Files</button>
+      <button class="nav-item" data-view="apps" disabled><span class="ico">📦</span> Apps</button>
+
+      <div class="nav-section">Troubleshoot</div>
+      <button class="nav-item" data-view="shell" disabled><span class="ico">⌨️</span> Shell</button>
+      <button class="nav-item" data-view="logcat" disabled><span class="ico">📋</span> Logcat</button>
+      <button class="nav-item" data-view="bugreport" disabled><span class="ico">🐞</span> Bug report</button>
+
+      <div class="nav-footer">
+        Built on <a href="https://github.com/yume-chan/ya-webadb">ya-webadb</a> (@yume-chan).
+      </div>
+    </nav>
+
+    <main class="main">
+      <!-- Not-connected placeholder -->
+      <div id="view-disconnected" class="view active">
+        <p class="warn">
+          Requires a Chromium browser (Chrome/Edge) over HTTPS with WebUSB, and
+          <strong>USB debugging</strong> enabled on the device. Kill any host
+          <code>adb</code> server first (<code>adb kill-server</code>) or the
+          connection will hang. No data leaves your machine.
+        </p>
+        <div class="placeholder">
+          <p>Connect a device to begin.</p>
+          <button id="connect2" class="btn">Connect device</button>
+        </div>
+      </div>
+
+      <!-- Device info -->
+      <div id="view-device" class="view">
+        <h2>Device info</h2>
+        <div class="card">
+          <dl id="deviceInfo" class="kv"></dl>
+          <div class="row" style="margin-top:1.25rem;margin-bottom:0;">
+            <button id="refreshInfo" class="btn outline">Refresh</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shell (interactive PTY terminal) -->
+      <div id="view-shell" class="view">
+        <h2>Shell</h2>
+        <div class="row">
+          <button id="shellRestart" class="btn outline">Restart</button>
+          <button id="shellFs" class="btn outline">Fullscreen</button>
+          <span id="shellStatus" class="muted"></span>
+        </div>
+        <div id="termWrap" class="term-wrap">
+          <button id="termFsExit" class="icon-btn fs-exit" title="Exit fullscreen (Esc)" hidden>✕</button>
+          <div id="term"></div>
+        </div>
+      </div>
+
+      <!-- Logcat -->
+      <div id="view-logcat" class="view">
+        <h2>Live logcat</h2>
+        <div class="row">
+          <input id="pkg" type="text" placeholder="package filter, e.g. com.example.app (optional)" />
+          <input id="tags" type="text" placeholder="tags, comma-separated, e.g. MyTag,Network (optional)" />
+        </div>
+        <div class="row">
+          <label class="inline">Min level
+            <select id="level">
+              <option value="V">Verbose</option>
+              <option value="D">Debug</option>
+              <option value="I" selected>Info</option>
+              <option value="W">Warn</option>
+              <option value="E">Error</option>
+              <option value="F">Fatal</option>
+            </select>
+          </label>
+          <label class="inline"><input id="clearfirst" type="checkbox" checked /> clear buffer on start</label>
+          <button id="logStart" class="btn">Start</button>
+          <button id="logStop" class="btn outline" disabled>Stop</button>
+          <button id="logClear" class="btn outline">Clear view</button>
+          <label class="inline"><input id="autoscroll" type="checkbox" checked /> auto-scroll</label>
+          <span id="logStatus" class="muted"></span>
+        </div>
+        <pre id="log">logcat output appears here.</pre>
+      </div>
+
+      <!-- Files -->
+      <div id="view-files" class="view">
+        <h2>Files</h2>
+        <div class="row">
+          <button id="filesUp" class="btn outline">⬆ Up</button>
+          <input id="filesPath" type="text" value="/sdcard/" />
+          <button id="filesGo" class="btn outline">Go</button>
+          <button id="filesRefresh" class="btn outline">Refresh</button>
+        </div>
+        <div class="row">
+          <input id="uploadFile" type="file" />
+          <button id="uploadBtn" class="btn">Upload here</button>
+          <span id="filesStatus" class="muted"></span>
+        </div>
+        <div id="filesList" class="filelist card"></div>
+      </div>
+
+      <!-- Apps -->
+      <div id="view-apps" class="view">
+        <h2>Apps</h2>
+        <div class="row">
+          <input id="apkFile" type="file" accept=".apk" />
+          <button id="installBtn" class="btn">Install APK</button>
+          <span id="appsStatus" class="muted"></span>
+        </div>
+        <div class="row">
+          <input id="appsFilter" type="text" placeholder="filter packages…" />
+          <label class="inline"><input id="appsSystem" type="checkbox" /> include system apps</label>
+          <button id="appsRefresh" class="btn outline">Refresh</button>
+        </div>
+        <div id="appsList" class="filelist card"></div>
+      </div>
+
+      <!-- Screen mirror (scrcpy) -->
+      <div id="view-scrcpy" class="view">
+        <h2>Screen mirror</h2>
+        <div class="row">
+          <button id="mirrorStart" class="btn">Start mirroring</button>
+          <button id="mirrorStop" class="btn outline" disabled>Stop</button>
+          <button id="mirrorFs" class="btn outline" disabled>Fullscreen</button>
+          <label class="inline">Max size
+            <select id="maxSize">
+              <option value="0">Native</option>
+              <option value="1920">1920</option>
+              <option value="1280" selected>1280</option>
+              <option value="800">800</option>
+            </select>
+          </label>
+          <span id="mirrorStatus" class="muted"></span>
+        </div>
+        <div id="screenWrap" class="screen-wrap">
+          <button id="fsExit" class="icon-btn fs-exit" title="Exit fullscreen (Esc)" hidden>✕</button>
+          <canvas id="screen" hidden></canvas>
+          <div id="screenEmpty" class="screen-empty">Not mirroring. Click “Start mirroring”.</div>
+        </div>
+        <p class="muted" style="margin-top:.75rem;">
+          Video only (no input control). Requires a browser with the WebCodecs
+          H.264 decoder. The scrcpy server (v3.3.3, Apache-2.0) is pushed to the
+          device on start.
+        </p>
+      </div>
+
+      <!-- Bug report -->
+      <div id="view-bugreport" class="view">
+        <h2>Bug report</h2>
+        <p class="muted">
+          Generates a full Android bug report (logs, dumpsys, stack traces…) on
+          the device, then downloads it. Can take 1–2 minutes.
+        </p>
+        <div class="row">
+          <button id="bugGen" class="btn">Generate &amp; download</button>
+          <span id="bugStatus" class="muted"></span>
+        </div>
+        <div id="bugProgress" class="progress" hidden><div id="bugBar" class="bar"></div></div>
+      </div>
+
+    </main>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -14,3 +14,13 @@ hugo.linux
 
 # Claude Code local config
 /.claude/
+
+# Temp files
+**/*.tmp
+**/*.tmp.*
+
+# Built from static/webadb/applist-src/Main.java by the gh-pages workflow
+/static/webadb/applist.dex
+
+# Downloaded from Genymobile/scrcpy releases by the gh-pages workflow
+/static/webadb/scrcpy-server
