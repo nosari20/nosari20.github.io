@@ -23,6 +23,14 @@
       <button class="nav-item active" data-view="device" disabled><span class="ico">📱</span> Device info</button>
       <button class="nav-item" data-view="scrcpy" disabled><span class="ico">🖥️</span> Screen mirror</button>
 
+      <div class="nav-section">Management</div>
+      <button class="nav-item" data-view="mgmt-overview" disabled><span class="ico">🛡️</span> Overview</button>
+      <button class="nav-item" data-view="mgmt-security" disabled><span class="ico">🔒</span> Security</button>
+      <button class="nav-item" data-view="mgmt-policies" disabled><span class="ico">📜</span> Policies</button>
+      <button class="nav-item" data-view="mgmt-apppolicies" disabled><span class="ico">📋</span> App policies</button>
+      <button class="nav-item" data-view="mgmt-appconfig" disabled><span class="ico">⚙️</span> App config</button>
+      <button class="nav-item" data-view="mgmt-raw" disabled><span class="ico">🗒️</span> Raw dumps</button>
+
        <div class="nav-section">Manage</div>
       <button class="nav-item" data-view="files" disabled><span class="ico">📁</span> Files</button>
       <button class="nav-item" data-view="apps" disabled><span class="ico">📦</span> Apps</button>
@@ -61,6 +69,66 @@
             <button id="refreshInfo" class="btn outline">Refresh</button>
           </div>
         </div>
+      </div>
+
+      <!-- Management: Overview -->
+      <div id="view-mgmt-overview" class="view">
+        <h2>Management — Overview</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div class="card"><dl id="mgmtSummary" class="kv"></dl></div>
+      </div>
+
+      <!-- Management: Security -->
+      <div id="view-mgmt-security" class="view">
+        <h2>Management — Security &amp; policy state</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtSecurity"></div>
+      </div>
+
+      <!-- Management: Policies -->
+      <div id="view-mgmt-policies" class="view">
+        <h2>Management — Policies</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtPolicies"></div>
+      </div>
+
+      <!-- Management: App policies -->
+      <div id="view-mgmt-apppolicies" class="view">
+        <h2>Management — App policies</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtAppPolicies"></div>
+      </div>
+
+      <!-- Management: App config -->
+      <div id="view-mgmt-appconfig" class="view">
+        <h2>Management — App configuration</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtAppconfig"></div>
+      </div>
+
+      <!-- Management: Raw dumps -->
+      <div id="view-mgmt-raw" class="view">
+        <h2>Management — Raw dumps</h2>
+        <div class="row">
+          <button class="btn outline mgmt-refresh">Refresh</button>
+          <span class="muted mgmt-status"></span>
+        </div>
+        <div id="mgmtRaw"></div>
       </div>
 
       <!-- Shell (interactive PTY terminal) -->
@@ -132,6 +200,22 @@
         </div>
         <div class="row">
           <input id="appsFilter" type="text" placeholder="filter packages…" />
+          <label class="inline">Profile
+            <select id="appsProfile">
+              <option value="all">All</option>
+              <option value="personal">Personal</option>
+              <option value="work">Work profile</option>
+            </select>
+          </label>
+          <label class="inline">Installer
+            <select id="appsInstaller">
+              <option value="all">All</option>
+              <option value="play">Play</option>
+              <option value="dpc">DPC</option>
+              <option value="sideloaded">Sideloaded</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
           <label class="inline"><input id="appsSystem" type="checkbox" /> include system apps</label>
           <button id="appsRefresh" class="btn outline">Refresh</button>
         </div>

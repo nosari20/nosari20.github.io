@@ -25,6 +25,13 @@ const pkgEl = $("pkg"), tagsEl = $("tags"), levelEl = $("level"),
 const deviceInfoEl = $("deviceInfo"), refreshInfoBtn = $("refreshInfo");
 const bugGenBtn = $("bugGen"), bugStatusEl = $("bugStatus"),
       bugProgressEl = $("bugProgress"), bugBarEl = $("bugBar");
+const mgmtSummaryEl = $("mgmtSummary"), mgmtSecurityEl = $("mgmtSecurity"),
+      mgmtPoliciesEl = $("mgmtPolicies"), mgmtAppPoliciesEl = $("mgmtAppPolicies"),
+      mgmtAppconfigEl = $("mgmtAppconfig"), mgmtRawEl = $("mgmtRaw");
+const mgmtRefreshBtns = [...document.querySelectorAll(".mgmt-refresh")];
+const mgmtStatusEls = [...document.querySelectorAll(".mgmt-status")];
+function setMgmtStatus(t) { for (const e of mgmtStatusEls) e.textContent = t; }
+function setMgmtRefreshDisabled(d) { for (const b of mgmtRefreshBtns) b.disabled = d; }
 const themeToggle = $("themeToggle");
 const mirrorStartBtn = $("mirrorStart"), mirrorStopBtn = $("mirrorStop"),
       mirrorFsBtn = $("mirrorFs"), maxSizeEl = $("maxSize"),
@@ -35,7 +42,7 @@ const filesUpBtn = $("filesUp"), filesPathEl = $("filesPath"), filesGoBtn = $("f
       filesStatusEl = $("filesStatus"), filesListEl = $("filesList");
 const apkFileEl = $("apkFile"), installBtn = $("installBtn"), appsStatusEl = $("appsStatus"),
       appsFilterEl = $("appsFilter"), appsSystemEl = $("appsSystem"), appsRefreshBtn = $("appsRefresh"),
-      appsListEl = $("appsList");
+      appsListEl = $("appsList"), appsProfileEl = $("appsProfile"), appsInstallerEl = $("appsInstaller");
 const navItems = [...document.querySelectorAll(".nav-item")];
 
 let adb = null;
@@ -132,7 +139,9 @@ function showView(name) {
   }
   if (name === "files" && adb && !filesLoaded) { filesLoaded = true; listDir(currentPath); }
   if (name === "apps" && adb && !appsLoaded) { appsLoaded = true; listApps(); }
+  if (name.startsWith("mgmt-") && adb && !mgmtLoaded) { mgmtLoaded = true; loadManagement(); }
 }
+let mgmtLoaded = false;
 for (const n of navItems) {
   n.addEventListener("click", () => { if (!n.disabled) showView(n.dataset.view); });
 }
@@ -151,9 +160,10 @@ function setConnected(on) {
     stopMirror();
     stopShell();
     disposeSync();
-    filesLoaded = false; appsLoaded = false;
+    filesLoaded = false; appsLoaded = false; mgmtLoaded = false;
     appObserver?.disconnect();
     appInfoCache.clear();
+    appProfiles = new Map(); dpcPkgsGlobal = new Set();
     aaptBin = undefined;
     dexPushed = false; appsBulk = null; iconsLoaded = false;
   }
@@ -165,6 +175,7 @@ function setConnected(on) {
   shellRestartBtn.disabled = !on;
   shellFsBtn.disabled = !on;
   bugGenBtn.disabled = !on;
+  setMgmtRefreshDisabled(!on);
 }
 
 if (!manager) {
@@ -792,10 +803,23 @@ let enrichQueue = Promise.resolve();   // serialize APK pulls (single sync socke
 let dexPushed = false;            // applist.dex pushed this connection
 let appsBulk = null;             // Map pkg -> { label, version, system } from app_process
 let iconsLoaded = false;         // icons already fetched this connection
+let appProfiles = new Map();     // pkg -> [{ user, managed, installer }]
+let dpcPkgsGlobal = new Set();   // DPC package names (for installer badges)
+let appUsers = [{ id: 0, managed: false }];   // profiles to query for icons
+
+function shortInstaller(inst) {
+  if (!inst) return "preinstalled/side";
+  if (dpcPkgsGlobal.has(inst)) return "DPC";
+  if (inst === "com.android.vending") return "Play";
+  if (/packageinstaller/.test(inst)) return "sideload";
+  if (inst === "com.android.shell") return "adb";
+  if (inst === "com.google.android.apps.nbu.files") return "Files";
+  return inst.split(".").pop();
+}
 let iconStore = {};              // pkg -> { v, icon } persisted in IndexedDB
 let iconStoreSerial = null;      // serial the loaded iconStore belongs to
 
-function iconCacheKey() { return `icons:${deviceSerial}`; }
+function iconCacheKey() { return `icons:v2:${deviceSerial}`; }
 async function ensureIconStore() {
   if (iconStoreSerial !== deviceSerial) {
     iconStore = (await idbGet(iconCacheKey()).catch(() => null)) || {};
@@ -810,19 +834,22 @@ const DEX_DEVICE_PATH = "/data/local/tmp/applist.dex";
 // Push the label-dumper dex and run it inside ART via app_process. Returns a
 // map of every package -> { label, version, system } in one shot (~150ms),
 // or throws if unsupported (old device / blocked hidden API).
-async function loadBulkAppInfo() {
-  if (!dexPushed) {
-    dlog("applist ▶ push dex");
-    const buf = new Uint8Array(await (await fetch("./applist.dex")).arrayBuffer());
-    const s = await getSync();
-    await s.write({
-      filename: DEX_DEVICE_PATH,
-      file: new ReadableStream({ start(c) { c.enqueue(buf); c.close(); } }),
-    });
-    dexPushed = true;
-  }
-  dlog("applist ▶ app_process run");
-  const out = await sh(`CLASSPATH=${DEX_DEVICE_PATH} app_process / Main`);
+async function ensureDexPushed() {
+  if (dexPushed) return;
+  dlog("applist ▶ push dex");
+  const buf = new Uint8Array(await (await fetch("./applist.dex")).arrayBuffer());
+  const s = await getSync();
+  await s.write({
+    filename: DEX_DEVICE_PATH,
+    file: new ReadableStream({ start(c) { c.enqueue(buf); c.close(); } }),
+  });
+  dexPushed = true;
+}
+
+async function loadBulkAppInfo(userId = 0) {
+  await ensureDexPushed();
+  dlog(`applist ▶ app_process run (user ${userId})`);
+  const out = await sh(`CLASSPATH=${DEX_DEVICE_PATH} app_process / Main labels ${userId}`);
   const map = new Map();
   for (const line of out.split("\n")) {
     if (!line) continue;
@@ -918,28 +945,33 @@ async function loadBulkIcons() {
   if (iconsLoaded) return;
   const baseStatus = appsStatusEl.textContent;
   try {
-    dlog("appicons ▶ app_process run");
     appsStatusEl.textContent = `${baseStatus} · loading icons…`;
-    const out = await sh(`CLASSPATH=${DEX_DEVICE_PATH} app_process / Main icons`);
     let n = 0;
-    for (const line of out.split("\n")) {
-      const tab = line.indexOf("\t");
-      if (tab < 0) continue;
-      const pkg = line.slice(0, tab);
-      const b64 = line.slice(tab + 1);
-      if (!pkg || !b64) continue;
-      const info = appInfoCache.get(pkg) || {};
-      info.icon = `data:image/png;base64,${b64}`;
-      appInfoCache.set(pkg, info);
-      iconStore[pkg] = { v: info.version || "", icon: info.icon };   // persist
-      const row = appsListEl.querySelector(`[data-pkg="${CSS.escape(pkg)}"]`);
-      if (row) applyAppInfo(row, pkg, info);
-      n++;
+    // Render icons per profile so work-profile-only apps get theirs too.
+    // User 0 first, then others; an icon already set is not overwritten.
+    for (const u of appUsers) {
+      dlog(`appicons ▶ app_process run (user ${u.id})`);
+      const out = await sh(`CLASSPATH=${DEX_DEVICE_PATH} app_process / Main icons ${u.id}`).catch(() => "");
+      for (const line of out.split("\n")) {
+        const tab = line.indexOf("\t");
+        if (tab < 0) continue;
+        const pkg = line.slice(0, tab);
+        const b64 = line.slice(tab + 1);
+        if (!pkg || !b64) continue;
+        const info = appInfoCache.get(pkg) || {};
+        if (info.icon) continue;   // already have it (user 0 wins)
+        info.icon = `data:image/png;base64,${b64}`;
+        appInfoCache.set(pkg, info);
+        iconStore[pkg] = { v: info.version || "", icon: info.icon };   // persist
+        const row = appsListEl.querySelector(`[data-pkg="${CSS.escape(pkg)}"]`);
+        if (row) applyAppInfo(row, pkg, info);
+        n++;
+      }
     }
     // Mark apps that have no icon as resolved (icon:null) so they aren't
     // refetched on every load.
-    if (appsBulk) for (const [pkg, info] of appsBulk) {
-      if (!iconStore[pkg]) iconStore[pkg] = { v: info.version || "", icon: null };
+    for (const pkg of allPackages) {
+      if (!iconStore[pkg]) iconStore[pkg] = { v: appInfoCache.get(pkg)?.version || "", icon: null };
     }
     iconsLoaded = true;
     await idbSet(iconCacheKey(), iconStore).catch((e) => dlog("icon cache save ✗", e?.message));
@@ -979,17 +1011,56 @@ async function listApps() {
       if (cached && cached.v === (info.version || "")) entry.icon = cached.icon;
       appInfoCache.set(pkg, entry);
     }
-    allPackages = [...appsBulk.keys()]
-      .filter((p) => wantSystem || !appsBulk.get(p).system)
-      .sort((a, b) => (appsBulk.get(a).label || a).localeCompare(appsBulk.get(b).label || b));
+
+    // Per-profile presence + installer of record. Query each user (work profile
+    // is a separate user) and record where each package is installed.
+    const [pmUsersOut, ownersOut] = await Promise.all([
+      sh("pm list users").catch(() => ""),
+      sh("cmd device_policy list-owners").catch(() => ""),
+    ]);
+    dpcPkgsGlobal = new Set([...ownersOut.matchAll(/\{([\w.]+)\/[\w.$]+\}/g)].map((mm) => mm[1]));
+    const users = parseUsers(pmUsersOut, []);
+    appUsers = users;
+    const perUser = await Promise.all(
+      users.map((u) => sh(`pm list packages -i --user ${u.id}`).catch(() => "")),
+    );
+    appProfiles = new Map();
+    users.forEach((u, idx) => {
+      for (const line of perUser[idx].split("\n")) {
+        const mm = line.match(/package:(\S+)\s+installer=(\S+)/);
+        if (!mm) continue;
+        const inst = mm[2] === "null" ? null : mm[2];
+        (appProfiles.get(mm[1]) || appProfiles.set(mm[1], []).get(mm[1])).push({ user: u.id, managed: u.managed, installer: inst });
+      }
+    });
+
+    // Labels/versions for work-profile-only apps (the user-0 dex misses them).
+    for (const u of users) {
+      if (u.id === 0) continue;
+      try {
+        const extra = await loadBulkAppInfo(u.id);
+        for (const [pkg, info] of extra) if (!appInfoCache.has(pkg)) appInfoCache.set(pkg, { label: info.label, version: info.version });
+      } catch (e) { dlog("applist ✗ user labels", u.id, e?.message); }
+    }
+
+    // Package set = union(profiles across users, bulk filtered by system toggle).
+    const set = new Set();
+    for (const [pkg, profs] of appProfiles) {
+      const isSystem = appsBulk.get(pkg)?.system;
+      if (wantSystem || !isSystem) set.add(pkg);
+      // mark profiles unknown-system as third-party (work-only apps)
+    }
+    for (const [pkg, info] of appsBulk) if (wantSystem || !info.system) set.add(pkg);
+    allPackages = [...set].sort((a, b) =>
+      (appInfoCache.get(a)?.label || a).localeCompare(appInfoCache.get(b)?.label || b));
     renderApps();   // cached icons show instantly
     appsStatusEl.textContent = `${allPackages.length} packages`;
     appsRefreshBtn.disabled = false; appsSystemEl.disabled = false;
 
     // Only run the (heavier) icon dump if some app is new or version-changed.
-    const needIcons = [...appsBulk.keys()].some((p) => {
+    const needIcons = allPackages.some((p) => {
       const c = iconStore[p];
-      return !c || c.v !== (appsBulk.get(p).version || "");
+      return !c || c.v !== (appInfoCache.get(p)?.version || "");
     });
     if (needIcons) loadBulkIcons();
     else { iconsLoaded = true; dlog("appicons ✓ from cache"); }
@@ -1015,9 +1086,33 @@ async function listApps() {
   }
 }
 
+function installerCategory(inst) {
+  if (!inst) return "sideloaded";
+  if (dpcPkgsGlobal.has(inst)) return "dpc";
+  if (inst === "com.android.vending") return "play";
+  if (/packageinstaller/.test(inst) || inst === "com.android.shell" || inst === "com.google.android.apps.nbu.files") return "sideloaded";
+  return "other";
+}
+
 function renderApps() {
   const filter = appsFilterEl.value.trim().toLowerCase();
-  const list = filter ? allPackages.filter((p) => p.toLowerCase().includes(filter)) : allPackages;
+  const profileFilter = appsProfileEl?.value || "all";
+  const installerFilter = appsInstallerEl?.value || "all";
+
+  const list = allPackages.filter((p) => {
+    if (filter) {
+      const label = (appInfoCache.get(p)?.label || "").toLowerCase();
+      if (!p.toLowerCase().includes(filter) && !label.includes(filter)) return false;
+    }
+    const profs = appProfiles.get(p) || [];
+    if (profileFilter === "personal" && !profs.some((x) => !x.managed) && profs.length) return false;
+    if (profileFilter === "work" && !profs.some((x) => x.managed)) return false;
+    if (installerFilter !== "all") {
+      const cats = profs.length ? profs.map((x) => installerCategory(x.installer)) : ["sideloaded"];
+      if (!cats.includes(installerFilter)) return false;
+    }
+    return true;
+  });
 
   // Reset the lazy-enrichment observer for this render.
   appObserver?.disconnect();
@@ -1039,6 +1134,21 @@ function renderApps() {
     name.append(document.createTextNode(pkg));       // primary line (replaced by label)
     const sub = document.createElement("span"); sub.className = "sub"; sub.textContent = pkg;
     name.append(sub);
+
+    // Profile badges: which user(s) it's installed on + per-profile installer.
+    const profs = appProfiles.get(pkg) || [];
+    if (profs.length) {
+      const pb = document.createElement("span"); pb.className = "profiles";
+      for (const p of profs) {
+        const b = document.createElement("span");
+        b.className = "prof-badge clickable" + (p.managed ? " work" : "");
+        b.textContent = `${p.managed ? "Work" : "Personal"} · ${shortInstaller(p.installer)}`;
+        b.title = `user ${p.user} · installer=${p.installer || "preinstalled/sideloaded"} — click for full source`;
+        b.addEventListener("click", () => inspectInstallSource(pkg, p.user, b, pb));
+        pb.append(b);
+      }
+      name.append(pb);
+    }
 
     const actions = document.createElement("span"); actions.className = "actions";
     const mkBtn = (label, fn, danger) => {
@@ -1123,6 +1233,8 @@ async function installApk() {
 
 appsRefreshBtn.addEventListener("click", listApps);
 appsFilterEl.addEventListener("input", renderApps);
+appsProfileEl.addEventListener("change", renderApps);
+appsInstallerEl.addEventListener("change", renderApps);
 appsSystemEl.addEventListener("change", listApps);
 installBtn.addEventListener("click", installApk);
 
@@ -1191,6 +1303,643 @@ async function generateBugreport() {
   }
 }
 bugGenBtn.addEventListener("click", generateBugreport);
+
+// ---- Device management -----------------------------------------------------
+
+function detailsBlock(title, text) {
+  const d = document.createElement("details"); d.className = "dump";
+  const s = document.createElement("summary"); s.textContent = title;
+  const pre = document.createElement("pre"); pre.textContent = text && text.trim() ? text : "(empty)";
+  d.append(s, pre);
+  return d;
+}
+
+function kvRow(dl, key, valueNode) {
+  const dt = document.createElement("dt"); dt.textContent = key;
+  const dd = document.createElement("dd");
+  if (valueNode instanceof Node) dd.append(valueNode); else dd.textContent = valueNode || "—";
+  dl.append(dt, dd);
+}
+
+// Parse `getprop` output into a Map.
+function parseProps(out) {
+  const m = new Map();
+  for (const line of out.split("\n")) {
+    const mm = line.match(/^\[(.+?)\]:\s*\[(.*)\]$/);
+    if (mm) m.set(mm[1], mm[2]);
+  }
+  return m;
+}
+// Parse "key=value" lines (one per line) into a Map; trims, normalizes "null".
+function parseKv(out) {
+  const m = new Map();
+  for (const line of out.split("\n")) {
+    const i = line.indexOf("=");
+    if (i < 0) continue;
+    let v = line.slice(i + 1).trim();
+    if (v === "null") v = "";
+    m.set(line.slice(0, i).trim(), v);
+  }
+  return m;
+}
+const yn = (v) => v === "1" ? "yes" : v === "0" ? "no" : (v || "—");
+
+// Extract a component string ("pkg/cls") from a line, ignoring "null".
+function extractComponent(s) {
+  if (!s) return null;
+  // Matches ComponentInfo{pkg/cls} and plain {pkg/cls} (list-owners form).
+  const c = s.match(/\{([\w.]+\/[\w.$]+)\}/);
+  if (c) return c[1];
+  const t = s.trim();
+  if (t && t.toLowerCase() !== "null" && /^[\w.]+\/[\w.$]+$/.test(t)) return t;
+  return null;
+}
+
+// Robustly determine owners from the actual dumps — NOT from section headers
+// (which are always present, even when no owner is set). Prefers the explicit
+// `list-owners` output, then parses `dumpsys device_policy` for ComponentInfo.
+function deriveManagement(owners, dp) {
+  let deviceOwner = null;
+  const profileOwners = [];   // { user, comp }
+
+  // 1) list-owners (authoritative when present and not "no owners").
+  const lo = (owners || "").trim();
+  if (lo && !/no device( policy)? owners?/i.test(lo)) {
+    for (const line of lo.split("\n")) {
+      const comp = extractComponent(line);
+      if (!comp) continue;
+      if (/device owner/i.test(line)) deviceOwner = comp;
+      else {
+        const u = line.match(/user\s*(\d+)/i);
+        profileOwners.push({ user: u ? +u[1] : 0, comp });
+      }
+    }
+  }
+
+  // 2) Parse the dump for real ComponentInfo under owner sections (handles
+  //    "Device Owner:" header followed by an admin= line, and "null").
+  if (!deviceOwner && !profileOwners.length) {
+    const lines = dp.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const doH = lines[i].match(/^\s*Device Owner:?\s*(.*)$/i);
+      if (doH) {
+        const comp = extractComponent(doH[1]) || lookaheadComponent(lines, i);
+        if (comp) deviceOwner = comp;
+        continue;
+      }
+      const poH = lines[i].match(/^\s*Profile Owner(?:\s*\(User (\d+)\))?:?\s*(.*)$/i);
+      if (poH) {
+        const comp = extractComponent(poH[2]) || lookaheadComponent(lines, i);
+        if (comp) profileOwners.push({ user: poH[1] ? +poH[1] : 0, comp });
+      }
+    }
+  }
+
+  const managed = !!deviceOwner || profileOwners.length > 0;
+  let mode;
+  if (deviceOwner) mode = "Fully managed (Device Owner)";
+  else if (profileOwners.some((p) => p.user > 0)) mode = "Work profile (Profile Owner on secondary user)";
+  else if (profileOwners.length) mode = "Profile Owner on primary user (COPE / financed)";
+  else mode = "Unmanaged (no device policy owner)";
+
+  const components = [deviceOwner, ...profileOwners.map((p) => p.comp)].filter(Boolean);
+  return { mode, managed, components, deviceOwner, profileOwners };
+}
+
+// Scan a few lines after an owner header for "admin=ComponentInfo{...}".
+function lookaheadComponent(lines, i) {
+  for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
+    const l = lines[j];
+    if (/^\s*(Device Owner|Profile Owner|Current|Enabled|Registered)/i.test(l)) break;
+    const c = extractComponent(l);
+    if (c) return c;
+    if (!l.trim()) break;
+  }
+  return null;
+}
+
+// Pull a value out of the device_policy dump with the first matching regex.
+function dpField(dp, ...regexes) {
+  for (const re of regexes) { const m = dp.match(re); if (m) return (m[1] ?? "").trim(); }
+  return "";
+}
+
+// Extract managed-configuration bundles (BundlePolicyValue / app restrictions)
+// from the dump, with the owning package where we can infer it. Brace-balanced.
+function balancedBraces(str, fromIdx) {
+  const open = str.indexOf("{", fromIdx);
+  if (open < 0) return null;
+  let d = 0;
+  for (let p = open; p < str.length; p++) {
+    const c = str[p];
+    if (c === "{") d++;
+    else if (c === "}") { d--; if (d === 0) return str.slice(open, p + 1); }
+  }
+  return null;
+}
+
+function extractManagedConfigs(dp) {
+  let out = [];
+
+  // Newer DevicePolicyEngine format:
+  //   PackagePolicyKey{ mPolicyKey= applicationRestrictions; mPackageName= <pkg> }
+  //     Per-admin Policy:
+  //       EnforcingAdmin { ... mComponentName= ComponentInfo{<dpc>} ... mUserId= N }
+  //         BundlePolicyValue { mValue= Bundle[{...}] }
+  const keyRe = /PackagePolicyKey\{[^}]*mPolicyKey=\s*applicationRestrictions;\s*mPackageName=\s*([\w.]+)[^}]*\}/g;
+  let km;
+  while ((km = keyRe.exec(dp))) {
+    const pkg = km[1];
+    const nextKey = dp.indexOf("PackagePolicyKey", km.index + 1);
+    const region = dp.slice(km.index, nextKey < 0 ? dp.length : nextKey);
+    const bIdx = region.indexOf("Bundle[{");
+    if (bIdx < 0) continue;
+    const body = balancedBraces(region, bIdx);
+    if (!body) continue;
+    const admin = (region.match(/mComponentName=\s*ComponentInfo\{([^}]+)\}/) || [])[1]
+      || (region.match(/EnforcingAdmin\s*\{[^}]*mPackageName=\s*([\w.]+)/) || [])[1] || null;
+    const userId = (region.match(/mUserId=\s*(\d+)/) || [])[1] || null;
+    out.push({ pkg, admin, userId, body });
+  }
+
+  // Fallback (older inline format):  <pkg> :|= [BundlePolicyValue …] Bundle[{…}]
+  if (!out.length) {
+    const start = /(?:([A-Za-z][\w.]+)\s*[:=]\s*)?(?:BundlePolicyValue\s*\{\s*mValue=\s*)?Bundle\[\{/g;
+    let mm;
+    while ((mm = start.exec(dp))) {
+      const bIdx = dp.indexOf("Bundle[{", mm.index);
+      if (bIdx < 0) break;
+      const body = balancedBraces(dp, bIdx);
+      if (!body) break;
+      out.push({ pkg: mm[1] || null, admin: null, userId: null, body });
+      start.lastIndex = mm.index + dp.indexOf("Bundle[{", mm.index) - mm.index + body.length;
+    }
+  }
+
+  // Dedupe identical (pkg, body).
+  const seen = new Set();
+  return out.filter((b) => { const k = (b.pkg || "") + b.body; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+// Indent a Bundle[{...}] / [...] string for readability (depth-aware).
+function prettyBundle(s) {
+  let out = "", indent = 0;
+  const pad = () => "  ".repeat(Math.max(0, indent));
+  for (let p = 0; p < s.length; p++) {
+    const c = s[p];
+    if (c === "{" || c === "[") { indent++; out += c + "\n" + pad(); }
+    else if (c === "}" || c === "]") { indent--; out += "\n" + pad() + c; }
+    else if (c === ",") { out += ",\n" + pad(); if (s[p + 1] === " ") p++; }
+    else out += c;
+  }
+  return out;
+}
+
+// Parse the per-admin policy blocks out of `dumpsys device_policy`.
+function parseAdmins(dp) {
+  const admins = [];
+  let user = null, cur = null, mode = null;
+  for (const raw of dp.split("\n")) {
+    const line = raw.replace(/\s+$/, "");
+    // Track the current user from any owning section header.
+    const uh = line.match(/(?:Enabled |Registered )?Device Admins? \(User (\d+)/i);
+    if (uh) { user = +uh[1]; continue; }
+    const ph = line.match(/Profile Owner \(User (\d+)\)/i);
+    if (ph) { user = +ph[1]; continue; }
+    if (/^\s*Device Owner\b/i.test(line)) { user = 0; continue; }   // DO runs on user 0
+    const am = line.match(/^(\s*)admin=ComponentInfo\{([^}]+)\}/);
+    if (am) { cur = { comp: am[2], user, indent: am[1].length, policies: [], kv: [] }; admins.push(cur); mode = null; continue; }
+    if (!cur) continue;
+    const indent = line.match(/^\s*/)[0].length;
+    if (line.trim() && indent <= cur.indent) { cur = null; mode = null; continue; }
+    const t = line.trim();
+    if (t === "policies:") { mode = "pol"; continue; }
+    if (mode === "pol" && t && !t.includes("=")) { cur.policies.push(t); continue; }
+    mode = null;
+    const kv = t.match(/^([\w.]+)=(.*)$/);
+    if (kv) cur.kv.push([kv[1], kv[2]]);
+  }
+  return admins;
+}
+
+// Parse `pm list users` into [{ id, name, managed }]. Managed-profile detection
+// uses the UserInfo flag (0x20), the name, or a profile owner on that user.
+function parseUsers(pmUsers, profileOwners) {
+  const poUsers = new Set((profileOwners || []).filter((p) => p.user > 0).map((p) => p.user));
+  const out = [];
+  for (const line of pmUsers.split("\n")) {
+    const mm = line.match(/UserInfo\{(\d+):([^:]*):([0-9a-fA-F]+)\}/);
+    if (!mm) continue;
+    const id = +mm[1], name = mm[2].trim(), flags = parseInt(mm[3], 16);
+    const managed = !!(flags & 0x20) || /profile/i.test(name) || poUsers.has(id);
+    out.push({ id, name, managed });
+  }
+  if (!out.length) out.push({ id: 0, name: "Owner", managed: false });
+  return out;
+}
+// Show the real install provenance for one package (installer of record +
+// initiating + originating package, from dumpsys package).
+async function inspectInstallSource(pkg, userId, chip, container) {
+  if (chip._src) { chip._src.remove(); chip._src = null; return; }
+  const line = document.createElement("span"); line.className = "src-line"; line.textContent = `${pkg}: …`;
+  chip._src = line; container.append(line);
+  try {
+    const esc = pkg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const [instLine, dump] = await Promise.all([
+      sh(`pm list packages -i --user ${userId} ${pkg}`),   // per-USER installer of record
+      sh(`dumpsys package ${pkg}`),
+    ]);
+    // installer of record for THIS profile (per-user)
+    const userInstaller = (instLine.match(new RegExp(`package:${esc}\\s+installer=(\\S+)`)) || [])[1] || "—";
+    // initiator/origin are package-level (shared across profiles)
+    const initiating = (dump.match(/installInitiatingPackageName=(\S+)/) || [])[1] || "—";
+    const originating = (dump.match(/installOriginatingPackageName=(\S+)/) || [])[1] || "—";
+    // per-user first-install time from the "User N:" block
+    const block = (dump.match(new RegExp(`User ${userId}:[\\s\\S]*?(?=\\n\\s*User \\d+:|$)`)) || [])[0] || "";
+    const firstInstall = ((block.match(/firstInstallTime=([^\n]+)/) || [])[1] || "—").trim();
+    line.textContent = `${pkg} (user ${userId})  ·  installer=${userInstaller}  ·  initiator=${initiating} (shared)  ·  origin=${originating} (shared)  ·  firstInstall=${firstInstall}`;
+  } catch (e) {
+    line.textContent = `${pkg}: error — ${e?.message ?? e}`;
+  }
+}
+
+function userLabel(u) {
+  return u.managed ? `User ${u.id} — Work profile` : u.id === 0 ? `User 0 — Personal` : `User ${u.id} — ${u.name || "secondary"}`;
+}
+
+// Extract package-name tokens from a string.
+function pkgTokens(s) {
+  return [...new Set((s || "").split(/[\s,]+/)
+    .map((x) => x.replace(/^[\[{"']+|[\]}"',;]+$/g, "").trim())
+    .filter((x) => /^[a-zA-Z][\w]*(\.[\w]+)+$/.test(x)))];
+}
+// Find a package list either inline (key=[...] / "Header: [...]") or as an
+// indented block under a header line.
+function extractPkgs(dp, headerWordRe, inlineRes) {
+  for (const re of inlineRes) { const m = dp.match(re); if (m) { const t = pkgTokens(m[1]); if (t.length) return t; } }
+  const lines = dp.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    if (!headerWordRe.test(lines[i])) continue;
+    const ind = lines[i].match(/^\s*/)[0].length;
+    const acc = [];
+    for (let j = i + 1; j < lines.length; j++) {
+      const l = lines[j];
+      if (!l.trim() || l.match(/^\s*/)[0].length <= ind) break;
+      acc.push(l.trim());
+    }
+    const t = pkgTokens(acc.join(" "));
+    if (t.length) return t;
+  }
+  return [];
+}
+
+// App-level policy categories (package lists).
+const APP_POLICY_CATS = [
+  ["Lock-task (kiosk) packages", /lock ?task packages/i, [/mLockTaskPackages\s*=\s*\[([^\]]*)\]/i, /lock ?task packages?:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Suspended packages", /suspended packages/i, [/mSuspendedPackages\s*=\s*\[([^\]]*)\]/i, /suspended packages?:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Hidden packages", /hidden packages/i, [/hidden packages?:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Uninstall-blocked packages", /uninstall[- ]?blocked/i, [/uninstall[- ]?blocked[^:\n]*:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Cross-profile packages", /cross[- ]?profile packages/i, [/mCrossProfilePackages\s*=\s*\[([^\]]*)\]/i, /cross[- ]?profile packages?:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Metered-data disabled", /metered/i, [/metered[^:\n]*disabled[^:\n]*:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Keep-uninstalled packages", /keep[- ]?uninstalled/i, [/keep[- ]?uninstalled packages?:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Enabled system apps", /enabled system apps/i, [/enabled system apps[^:\n]*:?\s*\[?([^\]\n]+)\]?/i]],
+  ["Protected packages", /protected packages/i, [/protected packages?:?\s*\[?([^\]\n]+)\]?/i]],
+];
+// App-control user restrictions worth highlighting.
+const APP_RESTRICTIONS = new Set([
+  "no_install_apps", "no_uninstall_apps", "no_install_unknown_sources",
+  "no_install_unknown_sources_globally", "no_control_apps", "no_apps_control",
+  "no_debugging_features", "disallow_install_apps", "disallow_uninstall_apps",
+]);
+
+const POLICY_LABELS = {
+  passwordQuality: "Password quality",
+  minimumPasswordLength: "Min password length",
+  passwordHistoryLength: "Password history length",
+  minimumPasswordLetters: "Min letters", minimumPasswordUpperCase: "Min uppercase",
+  minimumPasswordLowerCase: "Min lowercase", minimumPasswordNumeric: "Min digits",
+  minimumPasswordSymbols: "Min symbols", minimumPasswordNonLetter: "Min non-letters",
+  maximumFailedPasswordsForWipe: "Max failed attempts → wipe",
+  maximumTimeToUnlock: "Max time to lock",
+  passwordExpirationTimeout: "Password expiration",
+  passwordExpirationDate: "Password expires",
+  strongAuthUnlockTimeout: "Strong-auth timeout",
+  disableCamera: "Camera disabled",
+  encryptionRequested: "Encryption required",
+  disabledKeyguardFeatures: "Disabled keyguard features",
+  requireAutoTime: "Require auto time",
+  permittedAccessiblityServices: "Permitted accessibility services",
+  permittedInputMethods: "Permitted input methods",
+  organizationName: "Organization name",
+  shortSupportMessage: "Short support message",
+  longSupportMessage: "Long support message",
+};
+const PW_QUALITY = {
+  0: "Unspecified", 0x8000: "Biometric weak", 0x10000: "Something",
+  0x20000: "Numeric", 0x30000: "Numeric (complex)", 0x40000: "Alphabetic",
+  0x50000: "Alphanumeric", 0x60000: "Complex", 0x80000: "Managed",
+};
+const KEYGUARD_FLAGS = [
+  [1, "Widgets"], [2, "Secure camera"], [4, "Secure notifications"],
+  [8, "Unredacted notifications"], [16, "Trust agents"], [32, "Fingerprint"],
+  [64, "Remote input"], [128, "Face"], [256, "Iris"], [512, "Shortcuts"],
+];
+function decodePwQuality(v) { const n = parseInt(v); return PW_QUALITY[n] !== undefined ? `${PW_QUALITY[n]} (${v})` : v; }
+function decodeKeyguard(v) {
+  const n = parseInt(v);
+  if (isNaN(n)) return v;
+  if (n === 0) return "none";
+  if (n < 0 || n >= 0x7fffffff) return "all features";
+  const out = KEYGUARD_FLAGS.filter(([b]) => n & b).map(([, name]) => name);
+  return out.length ? out.join(", ") : String(n);
+}
+function decodePolicyValue(key, v) {
+  if (key === "passwordQuality") return decodePwQuality(v);
+  if (key === "disabledKeyguardFeatures") return decodeKeyguard(v);
+  // Hide noisy "not set" sentinels.
+  if (/^(-1|0|9223372036854775807|false|null|\{\}|\[\])$/.test(v) &&
+      /Timeout|Expiration|History|minimum|maximum|Failed/i.test(key)) return v;
+  return v;
+}
+
+const SETTINGS_GLOBAL = [
+  "device_provisioned", "adb_enabled", "development_settings_enabled",
+  "package_verifier_user_consent", "package_verifier_enable", "stay_on_while_plugged_in",
+  "always_on_vpn_app", "always_on_vpn_lockdown", "http_proxy",
+  "global_http_proxy_host", "global_http_proxy_port",
+  "private_dns_mode", "private_dns_specifier", "wifi_device_owner_configs_lockdown",
+];
+const SETTINGS_SECURE = [
+  "user_setup_complete", "install_non_market_apps", "location_mode",
+  "managed_provisioning_dpc_downloaded", "lockscreen.disabled", "default_input_method",
+];
+
+async function loadManagement() {
+  setMgmtRefreshDisabled(true);
+  setMgmtStatus("Loading…");
+  mgmtSummaryEl.replaceChildren(loaderEl("Reading device policy…"));
+  mgmtSecurityEl.replaceChildren();
+  mgmtPoliciesEl.replaceChildren();
+  mgmtAppPoliciesEl.replaceChildren();
+  mgmtAppconfigEl.replaceChildren();
+  mgmtRawEl.replaceChildren();
+  dlog("management ▶");
+  try {
+    const gCmd = `for k in ${SETTINGS_GLOBAL.join(" ")}; do echo "$k=$(settings get global $k)"; done`;
+    const sCmd = `for k in ${SETTINGS_SECURE.join(" ")}; do echo "$k=$(settings get secure $k)"; done`;
+    const [owners, dp, usersDump, pmUsers, disabled, propsRaw, selinux, gRaw, sRaw, dpmOwners] =
+      await Promise.all([
+        sh("cmd device_policy list-owners").catch(() => ""),
+        sh("dumpsys device_policy").catch(() => ""),
+        sh("dumpsys user").catch(() => ""),
+        sh("pm list users").catch(() => ""),
+        sh("pm list packages -d").catch(() => ""),
+        sh("getprop").catch(() => ""),
+        sh("getenforce").catch(() => ""),
+        sh(gCmd).catch(() => ""),
+        sh(sCmd).catch(() => ""),
+        sh("dpm list-owners 2>/dev/null").catch(() => ""),
+      ]);
+
+    const props = parseProps(propsRaw);
+    const g = parseKv(gRaw), s = parseKv(sRaw);
+    const m = deriveManagement(owners, dp);
+
+    // ---- Summary ----
+    mgmtSummaryEl.replaceChildren();
+    const modeTag = document.createElement("span");
+    modeTag.className = `tag ${m.managed ? "managed" : "unmanaged"}`;
+    modeTag.textContent = m.managed ? "Managed" : "Unmanaged";
+    const modeWrap = document.createElement("span");
+    modeWrap.append(modeTag, document.createTextNode(" " + m.mode));
+    kvRow(mgmtSummaryEl, "Mode", modeWrap);
+    kvRow(mgmtSummaryEl, "DPC component(s)", m.components.length ? m.components.join("\n") : "none");
+    const org = dpField(dp, /Organization name:\s*(.+)/i, /mOrganizationName=(.+)/);
+    kvRow(mgmtSummaryEl, "Organization", org || "—");
+    const enrollSpecificId = dpField(dp, /Enrollment specific id:\s*(.+)/i, /mEnrollmentSpecificId='?([^'\n]+)/i);
+    if (enrollSpecificId) kvRow(mgmtSummaryEl, "Enrollment-specific ID", enrollSpecificId);
+    const affiliation = dpField(dp, /Affiliation ids?:\s*\{?([^}\n]*)\}?/i, /mAffiliationIds=\{?([^}\n]*)\}?/i)
+      .replace(/^[{\s]+|[}\s]+$/g, "").trim();
+    kvRow(mgmtSummaryEl, "Affiliation IDs", affiliation || "none");
+    kvRow(mgmtSummaryEl, "Device provisioned", yn(g.get("device_provisioned")));
+    kvRow(mgmtSummaryEl, "User setup complete", yn(s.get("user_setup_complete")));
+    const userLines = pmUsers.split("\n").filter((l) => l.includes("UserInfo")).map((l) => l.trim());
+    kvRow(mgmtSummaryEl, "Users", userLines.length ? userLines.join("\n") : "—");
+
+    // ---- Security & policy state ----
+    const secCard = document.createElement("div"); secCard.className = "card";
+    const secTitle = document.createElement("h3"); secTitle.textContent = "Security & policy state";
+    secTitle.style.cssText = "margin:.25rem 0 .9rem;font-size:1rem;font-weight:500;";
+    const secDl = document.createElement("dl"); secDl.className = "kv";
+    const proxy = g.get("http_proxy") || [g.get("global_http_proxy_host"), g.get("global_http_proxy_port")].filter(Boolean).join(":");
+    const vpnApp = g.get("always_on_vpn_app");
+    [
+      ["SELinux", selinux.trim() || "—"],
+      ["Bootloader", props.get("ro.boot.flash.locked") === "1" ? "locked" : props.get("ro.boot.flash.locked") === "0" ? "UNLOCKED" : "—"],
+      ["Verified boot", props.get("ro.boot.verifiedbootstate") || "—"],
+      ["dm-verity", props.get("ro.boot.veritymode") || "—"],
+      ["Encryption", [props.get("ro.crypto.state"), props.get("ro.crypto.type")].filter(Boolean).join(" / ") || "—"],
+      ["Security patch", props.get("ro.build.version.security_patch") || "—"],
+      ["Android", [props.get("ro.build.version.release"), props.get("ro.build.version.sdk") && `API ${props.get("ro.build.version.sdk")}`].filter(Boolean).join(" ")],
+      ["ADB enabled", yn(g.get("adb_enabled"))],
+      ["Developer settings", yn(g.get("development_settings_enabled"))],
+      ["Unknown sources", yn(s.get("install_non_market_apps"))],
+      ["Package verifier", yn(g.get("package_verifier_enable"))],
+      ["Private DNS", [g.get("private_dns_mode"), g.get("private_dns_specifier")].filter(Boolean).join(": ") || "—"],
+      ["HTTP proxy", proxy || "none"],
+      ["Always-on VPN", vpnApp ? `${vpnApp}${g.get("always_on_vpn_lockdown") === "1" ? " (lockdown)" : ""}` : "none"],
+      ["Location mode", s.get("location_mode") || "—"],
+    ].forEach(([k, v]) => kvRow(secDl, k, v));
+    secCard.append(secTitle, secDl);
+
+    // ---- Parsed policy highlights from device_policy ----
+    const KW = /password|lock ?task|restriction|always[- ]on vpn|system update|permission policy|organization|affiliation|cross[- ]profile|suspend|keyguard|status bar|wipe|maximum failed|disabled features|ca cert|trusted credential|min(imum)?[\s_]?(password)?[\s_]?length|complexity|expir|global proxy|short support|long support/i;
+    const seenHi = new Set();
+    const highlights = dp.split("\n").map((l) => l.replace(/\s+$/, "")).filter((l) => {
+      const t = l.trim();
+      if (!t || !KW.test(l) || seenHi.has(t)) return false;
+      seenHi.add(t);   // drop duplicate lines repeated across per-user sections
+      return true;
+    });
+
+    // ---- Managed app configs / app restrictions ----
+    const restr = (dp.match(/Application Restrictions[\s\S]*?(?=\n\S|\n\n|$)/i) || [])[0]
+      || (dp.match(/mApplicationRestrictions[\s\S]*?(?=\n\S|\n\n|$)/i) || [])[0];
+
+    // ---- Active admins (per user) ----
+    const adminsBlock = (dp.match(/Enabled Device Admins[\s\S]*?(?=\n[A-Z][a-z]+ \w|\n\n\S|$)/i) || [])[0];
+
+    // ---- Render into the split views ----
+    // Security
+    mgmtSecurityEl.replaceChildren(secCard);
+
+    // Policies — structured per-admin cards (dedupe repeated admin= blocks).
+    const adminMap = new Map();
+    for (const a of parseAdmins(dp)) {
+      if (a.user == null) a.user = 0;
+      const key = `${a.comp}@${a.user}`;
+      const e = adminMap.get(key);
+      if (!e) { adminMap.set(key, a); continue; }
+      e.policies = [...new Set([...e.policies, ...a.policies])];
+      const have = new Set(e.kv.map((x) => x[0]));
+      for (const [k, v] of a.kv) if (!have.has(k)) e.kv.push([k, v]);
+    }
+    const admins = [...adminMap.values()];
+    const restrTokens = [...new Set(
+      [...(dp + "\n" + usersDump).matchAll(/\b((?:no_|disallow_|ensure_)[a-z0-9_]+)/gi)].map((mm) => mm[1].toLowerCase()),
+    )].sort();
+
+    mgmtPoliciesEl.replaceChildren();
+    if (admins.length) {
+      for (const a of admins) {
+        const card = document.createElement("div"); card.className = "card policy-card";
+        const h = document.createElement("h3");
+        const comp = document.createElement("span"); comp.className = "comp"; comp.textContent = a.comp;
+        h.append(comp, document.createTextNode(`  (User ${a.user ?? 0})`));
+        card.append(h);
+
+        if (a.policies.length) {
+          const chips = document.createElement("div"); chips.className = "chips";
+          for (const p of a.policies) {
+            const c = document.createElement("span"); c.className = "chip"; c.textContent = p; chips.append(c);
+          }
+          card.append(chips);
+        }
+
+        // Only show meaningful settings (skip uid/packageName/etc and unset).
+        const skip = /^(uid|packageName|testOnlyAdmin|name|getPolicyValue|isPermissionBased)$/i;
+        const dl = document.createElement("dl"); dl.className = "kv";
+        for (const [k, v] of a.kv) {
+          if (skip.test(k)) continue;
+          if (/^(|null|\{\}|\[\]|-1|false)$/.test(v) && !POLICY_LABELS[k]) continue;
+          kvRow(dl, POLICY_LABELS[k] || k, decodePolicyValue(k, v));
+        }
+        if (dl.childElementCount) card.append(dl);
+        mgmtPoliciesEl.append(card);
+      }
+    } else {
+      const none = document.createElement("p"); none.className = "muted";
+      none.textContent = "No active device admins parsed.";
+      mgmtPoliciesEl.append(none);
+    }
+
+    if (restrTokens.length) {
+      const rcard = document.createElement("div"); rcard.className = "card policy-card";
+      const rh = document.createElement("h3"); rh.textContent = `User restrictions (${restrTokens.length})`;
+      const chips = document.createElement("div"); chips.className = "chips";
+      for (const t of restrTokens) { const c = document.createElement("span"); c.className = "chip"; c.textContent = t; chips.append(c); }
+      rcard.append(rh, chips);
+      mgmtPoliciesEl.append(rcard);
+    }
+
+    const hi = detailsBlock(`Policy highlights — raw lines (${highlights.length})`, highlights.join("\n"));
+    mgmtPoliciesEl.append(hi, detailsBlock("Active admins (raw block)", adminsBlock || "(not found in dump)"));
+
+    // ---- App policies ----
+    const chipCard = (title, items) => {
+      const card = document.createElement("div"); card.className = "card policy-card";
+      const h = document.createElement("h3"); h.textContent = `${title} (${items.length})`;
+      const chips = document.createElement("div"); chips.className = "chips";
+      for (const it of items) { const c = document.createElement("span"); c.className = "chip"; c.textContent = it; chips.append(c); }
+      card.append(h, chips); return card;
+    };
+    mgmtAppPoliciesEl.replaceChildren();
+    let anyAppPolicy = false;
+
+    // Single-value app policies.
+    const permPolicy = dpField(dp, /permission policy:?\s*([A-Z_]+|\d+)/i, /mPermissionPolicy=(\S+)/i);
+    const lockFeatures = dpField(dp, /mLockTaskFeatures\s*=\s*(\S+)/i, /lock ?task features?:?\s*(\S+)/i);
+    if (permPolicy || lockFeatures) {
+      const card = document.createElement("div"); card.className = "card policy-card";
+      const h = document.createElement("h3"); h.textContent = "App control modes"; card.append(h);
+      const dl = document.createElement("dl"); dl.className = "kv";
+      if (permPolicy) kvRow(dl, "Permission grant policy", permPolicy);
+      if (lockFeatures) kvRow(dl, "Lock-task features", lockFeatures);
+      card.append(dl); mgmtAppPoliciesEl.append(card); anyAppPolicy = true;
+    }
+
+    // App-control user restrictions.
+    const appRestr = restrTokens.filter((t) => APP_RESTRICTIONS.has(t));
+    if (appRestr.length) { mgmtAppPoliciesEl.append(chipCard("App-control restrictions", appRestr)); anyAppPolicy = true; }
+
+    // Package-list categories.
+    for (const [title, headerRe, inlineRes] of APP_POLICY_CATS) {
+      const pkgs = extractPkgs(dp, headerRe, inlineRes);
+      if (pkgs.length) { mgmtAppPoliciesEl.append(chipCard(title, pkgs)); anyAppPolicy = true; }
+    }
+
+    // Permission grant states & delegated scopes (raw filtered lines).
+    const seenP = new Set();
+    const permGrants = dp.split("\n").map((l) => l.trim())
+      .filter((l) => /=\s*(granted|denied|default)\b/i.test(l) && /[\w.]+\.[\w.]+/.test(l))
+      .filter((l) => !seenP.has(l) && seenP.add(l));
+    // Delegated scopes: package -> real delegation-* scopes (not a loose grep).
+    const delegMap = new Map();
+    for (const line of dp.split("\n")) {
+      const scopes = [...line.matchAll(/delegation-[\w-]+/g)].map((x) => x[0]);
+      if (!scopes.length) continue;
+      const pkg = (line.match(/\b([a-z][\w]+(?:\.[\w]+){2,})\b/) || [])[1] || "(unknown)";
+      const set = delegMap.get(pkg) || delegMap.set(pkg, new Set()).get(pkg);
+      scopes.forEach((sc) => set.add(sc));
+    }
+    if (permGrants.length) mgmtAppPoliciesEl.append(detailsBlock(`Permission grant states (${permGrants.length})`, permGrants.join("\n")));
+    if (delegMap.size) {
+      const card = document.createElement("div"); card.className = "card policy-card";
+      const h = document.createElement("h3"); h.textContent = `Delegated scopes (${delegMap.size})`; card.append(h);
+      const dl = document.createElement("dl"); dl.className = "kv";
+      for (const [pkg, scopes] of delegMap) kvRow(dl, pkg, [...scopes].join(", "));
+      card.append(dl); mgmtAppPoliciesEl.append(card); anyAppPolicy = true;
+    }
+
+    if (!anyAppPolicy && !permGrants.length) {
+      const none = document.createElement("p"); none.className = "muted";
+      none.textContent = "No app-level policies detected in the device_policy dump.";
+      mgmtAppPoliciesEl.append(none);
+    }
+
+    // App config — parsed managed-configuration bundles per app.
+    mgmtAppconfigEl.replaceChildren();
+    const bundles = extractManagedConfigs(dp);
+    if (bundles.length) {
+      for (const b of bundles) {
+        const title = b.pkg
+          ? `Managed config — ${b.pkg}${b.userId ? ` (user ${b.userId})` : ""}`
+          : "Managed config";
+        const text = (b.admin ? `enforced by: ${b.admin}\n\n` : "") + prettyBundle(b.body);
+        const blk = detailsBlock(title, text);
+        blk.open = bundles.length <= 3;
+        mgmtAppconfigEl.append(blk);
+      }
+    }
+    // Keep the raw restrictions block too, as a fallback.
+    mgmtAppconfigEl.append(
+      detailsBlock("Raw application restrictions block", restr || "(none found in device_policy dump)"),
+    );
+    if (!bundles.length) {
+      const note = document.createElement("p"); note.className = "muted";
+      note.textContent = "No managed configurations (BundlePolicyValue) found in the dump.";
+      mgmtAppconfigEl.prepend(note);
+    }
+
+    // Raw dumps
+    mgmtRawEl.replaceChildren(
+      detailsBlock("Owners (cmd device_policy list-owners)", owners + (dpmOwners && dpmOwners !== owners ? "\n\n--- dpm list-owners ---\n" + dpmOwners : "")),
+      detailsBlock("Disabled / suspended packages (pm list packages -d)", disabled),
+      detailsBlock("Users (dumpsys user)", usersDump),
+      detailsBlock("Full device policy (dumpsys device_policy)", dp),
+    );
+
+    setMgmtStatus(m.managed ? "Managed" : "Unmanaged");
+    dlog("management ✓", m.mode);
+  } catch (err) {
+    console.error(err);
+    mgmtSummaryEl.replaceChildren();
+    setMgmtStatus(`Error: ${err?.message ?? err}`);
+  } finally {
+    setMgmtRefreshDisabled(!adb);
+  }
+}
+for (const b of mgmtRefreshBtns) b.addEventListener("click", loadManagement);
 
 // Initial state.
 setConnected(false);

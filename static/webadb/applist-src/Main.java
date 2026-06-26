@@ -4,8 +4,10 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
+import android.os.UserHandle;
 import android.util.Base64;
 
 import java.io.ByteArrayOutputStream;
@@ -16,11 +18,13 @@ import java.util.List;
  * Dumps installed-app metadata, read straight from the framework PackageManager
  * inside ART via app_process — no per-APK pull, no aapt.
  *
- *   CLASSPATH=/data/local/tmp/applist.dex app_process / Main          (labels)
- *   CLASSPATH=/data/local/tmp/applist.dex app_process / Main icons    (icons)
+ *   CLASSPATH=/data/local/tmp/applist.dex app_process / Main [icons] [userId]
  *
  * labels: one line per app, tab-separated  package \t label \t version \t system
  * icons:  one line per app, tab-separated  package \t base64-png   (96x96)
+ *
+ * Optional userId (default 0) targets a specific profile (e.g. the work
+ * profile) via createContextAsUser — shell holds INTERACT_ACROSS_USERS_FULL.
  *
  * Uses ActivityThread (hidden API, via reflection) to obtain a system Context,
  * then the public PackageManager. getApplicationIcon() rasterizes adaptive
@@ -31,15 +35,30 @@ public class Main {
 
     public static void main(String[] args) {
         try {
+            boolean iconsMode = false;
+            int userId = 0;
+            for (String a : args) {
+                if ("icons".equals(a)) iconsMode = true;
+                else if ("labels".equals(a)) iconsMode = false;
+                else { try { userId = Integer.parseInt(a); } catch (NumberFormatException ignored) {} }
+            }
+
             Looper.prepareMainLooper();
             Class<?> at = Class.forName("android.app.ActivityThread");
             Method systemMain = at.getMethod("systemMain");
             Object thread = systemMain.invoke(null);
             Method getSystemContext = at.getMethod("getSystemContext");
             Context ctx = (Context) getSystemContext.invoke(thread);
+            if (userId != 0) {
+                // Target another profile's PackageManager (API 30+).
+                // UserHandle.of(int) is hidden, so reach it via reflection.
+                Class<?> uh = Class.forName("android.os.UserHandle");
+                UserHandle handle = (UserHandle) uh.getMethod("of", int.class).invoke(null, userId);
+                ctx = (Context) Context.class
+                    .getMethod("createContextAsUser", UserHandle.class, int.class)
+                    .invoke(ctx, handle, 0);
+            }
             PackageManager pm = ctx.getPackageManager();
-
-            boolean iconsMode = args.length > 0 && "icons".equals(args[0]);
             List<ApplicationInfo> apps = pm.getInstalledApplications(0);
             StringBuilder sb = new StringBuilder(apps.size() * (iconsMode ? 4096 : 48));
 
@@ -78,8 +97,19 @@ public class Main {
     }
 
     private static String iconBase64(PackageManager pm, ApplicationInfo ai) {
+        Drawable d = null;
+        // Preferred path.
+        try { d = pm.getApplicationIcon(ai); } catch (Throwable ignored) {}
+        // Cross-user fallback: load the APK's own resources directly (works
+        // even when getApplicationIcon fails in a createContextAsUser context).
+        if (d == null && ai.icon != 0) {
+            try {
+                Resources res = pm.getResourcesForApplication(ai);
+                d = res.getDrawableForDensity(ai.icon, 480 /* xxhdpi */, null);
+            } catch (Throwable ignored) {}
+        }
+        if (d == null) return "";
         try {
-            Drawable d = pm.getApplicationIcon(ai);
             Bitmap bmp = Bitmap.createBitmap(ICON_PX, ICON_PX, Bitmap.Config.ARGB_8888);
             Canvas c = new Canvas(bmp);
             d.setBounds(0, 0, ICON_PX, ICON_PX);
