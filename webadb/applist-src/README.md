@@ -30,7 +30,7 @@ D8="$SDK/build-tools/36.0.0/d8.bat"
 
 # run from static/webadb/applist-src/
 javac --release 11 -cp "$AJAR" -d classes Main.java
-"$D8" classes/Main.class --lib "$AJAR" --min-api 24 --output .
+"$D8" classes/*.class --lib "$AJAR" --min-api 24 --output .   # *.class: includes inner classes
 mv classes.dex ../applist.dex
 ```
 

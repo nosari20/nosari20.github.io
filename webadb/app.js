@@ -27,7 +27,11 @@ const bugGenBtn = $("bugGen"), bugStatusEl = $("bugStatus"),
       bugProgressEl = $("bugProgress"), bugBarEl = $("bugBar");
 const mgmtSummaryEl = $("mgmtSummary"), mgmtSecurityEl = $("mgmtSecurity"),
       mgmtPoliciesEl = $("mgmtPolicies"), mgmtAppPoliciesEl = $("mgmtAppPolicies"),
-      mgmtAppconfigEl = $("mgmtAppconfig"), mgmtRawEl = $("mgmtRaw");
+      mgmtAppconfigEl = $("mgmtAppconfig"), mgmtRawEl = $("mgmtRaw"),
+      mgmtEffectiveEl = $("mgmtEffective"), mgmtCertsEl = $("mgmtCerts"),
+      mgmtNetworkEl = $("mgmtNetwork"), mgmtDiagEl = $("mgmtDiag");
+const effOnlyIssuesEl = $("effOnlyIssues"), diagLogcatBtn = $("diagLogcat"),
+      diagExportBtn = $("diagExport"), diagStatusEl = $("diagStatus");
 const mgmtRefreshBtns = [...document.querySelectorAll(".mgmt-refresh")];
 const mgmtStatusEls = [...document.querySelectorAll(".mgmt-status")];
 function setMgmtStatus(t) { for (const e of mgmtStatusEls) e.textContent = t; }
@@ -1157,11 +1161,7 @@ function renderApps() {
       b.addEventListener("click", () => fn(pkg));
       return b;
     };
-    actions.append(
-      mkBtn("Stop", forceStopApp),
-      mkBtn("Clear", clearApp, true),
-      mkBtn("Uninstall", uninstallApp, true),
-    );
+    actions.append(mkBtn("Details", () => openAppDetail(pkg, primaryUser(pkg))));
 
     row._iconEl = ico; row._name = name; row._sub = sub;
     row.append(ico, name, actions);
@@ -1229,6 +1229,201 @@ async function installApk() {
   } finally {
     installBtn.disabled = false;
   }
+}
+
+// ---- App detail modal ------------------------------------------------------
+
+const appModal = $("appModal"), appModalTitle = $("appModalTitle"),
+      appModalBody = $("appModalBody"), appModalClose = $("appModalClose");
+
+function primaryUser(pkg) {
+  const profs = appProfiles.get(pkg) || [];
+  return (profs.find((p) => !p.managed) || profs[0] || { user: 0 }).user;
+}
+function closeAppModal() { appModal.hidden = true; appModalBody.replaceChildren(); }
+appModalClose.addEventListener("click", closeAppModal);
+appModal.addEventListener("click", (e) => { if (e.target === appModal) closeAppModal(); });
+window.addEventListener("keydown", (e) => { if (e.key === "Escape" && !appModal.hidden) closeAppModal(); });
+
+const fmtDateTime = (ms) => { if (!ms) return "—"; try { return new Date(ms).toLocaleString(); } catch { return String(ms); } };
+
+async function launchComponent(comp, userId, statusEl) {
+  if (!/^[A-Za-z0-9_.$/]+$/.test(comp)) { statusEl.textContent = "invalid component"; return; }
+  statusEl.textContent = `Launching ${comp}…`;
+  try {
+    const res = await sh(`am start --user ${userId} -n '${comp}'`);
+    statusEl.textContent = /error|exception/i.test(res) ? res : `Started ${comp}`;
+    dlog("am start", comp, res);
+  } catch (e) { statusEl.textContent = `Error: ${e?.message ?? e}`; }
+}
+
+function logcatForApp(pkg) {
+  pkgEl.value = pkg; tagsEl.value = "";
+  closeAppModal();
+  showView("logcat");
+  for (const n of navItems) n.classList.toggle("active", n.dataset.view === "logcat");
+  if (!logProcess) startLogcat();
+}
+
+async function openAppDetail(pkg, userId) {
+  appModalTitle.textContent = pkg;
+  appModalBody.replaceChildren(loaderEl("Loading details…"));
+  appModal.hidden = false;
+  try {
+    const [json, dp] = await Promise.all([
+      sh(`CLASSPATH=${DEX_DEVICE_PATH} app_process / Main detail ${pkg} ${userId}`),
+      sh("dumpsys device_policy").catch(() => ""),
+    ]);
+    let d;
+    try { d = JSON.parse(json); } catch { appModalBody.replaceChildren(); mgmtNote(appModalBody, `Could not parse details: ${json.slice(0, 200)}`); return; }
+    const configs = dp ? extractManagedConfigs(dp).filter((b) => b.pkg === pkg) : [];
+    renderAppDetail(d, userId, configs);
+  } catch (e) {
+    appModalBody.replaceChildren(); mgmtNote(appModalBody, `Error: ${e?.message ?? e}`);
+  }
+}
+
+function renderAppDetail(d, userId, configs) {
+  appModalTitle.textContent = `${d.label || d.package}  ·  user ${userId}`;
+  appModalBody.replaceChildren();
+  const status = document.createElement("div"); status.className = "muted"; status.style.minHeight = "1.2em";
+
+  // Profile selector — drives which user the detail + launch target.
+  const profs = appProfiles.get(d.package) || [];
+  if (profs.length > 1) {
+    const row = document.createElement("div"); row.className = "row";
+    const lbl = document.createElement("label"); lbl.className = "inline"; lbl.textContent = "Profile";
+    const sel = document.createElement("select");
+    for (const p of profs) {
+      const o = document.createElement("option"); o.value = String(p.user);
+      o.textContent = p.managed ? `Work profile (user ${p.user})` : `Personal (user ${p.user})`;
+      if (p.user === userId) o.selected = true;
+      sel.append(o);
+    }
+    sel.addEventListener("change", () => openAppDetail(d.package, Number(sel.value)));
+    lbl.append(sel); row.append(lbl); appModalBody.append(row);
+  }
+
+  // Action row
+  const launchRow = document.createElement("div"); launchRow.className = "row";
+  const mkAct = (label, cls, fn) => {
+    const b = document.createElement("button"); b.className = `btn ${cls}`; b.textContent = label;
+    b.addEventListener("click", fn); launchRow.append(b); return b;
+  };
+  if (d.launchActivity && d.launchActivity !== null) {
+    mkAct("Launch app", "", () => launchComponent(d.launchActivity, userId, status));
+  }
+  mkAct("Logcat for this app", "outline", () => logcatForApp(d.package));
+  mkAct("Force-stop", "outline", async () => {
+    status.textContent = "Stopping…";
+    status.textContent = await sh(`am force-stop --user ${userId} ${d.package}`).then(() => "Force-stopped").catch((e) => `Error: ${e.message}`);
+  });
+  mkAct("Clear data", "outline", async () => {
+    if (!confirm(`Clear all data of ${d.package} (user ${userId})? Irreversible.`)) return;
+    status.textContent = "Clearing…";
+    status.textContent = await sh(`pm clear --user ${userId} ${d.package}`).catch((e) => `Error: ${e.message}`);
+  });
+  mkAct("Uninstall", "outline", async () => {
+    if (!confirm(`Uninstall ${d.package} from user ${userId}?`)) return;
+    status.textContent = "Uninstalling…";
+    try {
+      const r = await sh(`pm uninstall --user ${userId} ${d.package}`);
+      status.textContent = `Uninstall: ${r || "done"}`;
+      iconsLoaded = false;
+      closeAppModal();
+      if (appsLoaded) listApps();
+    } catch (e) { status.textContent = `Error: ${e?.message ?? e}`; }
+  }).classList.add("danger-outline");
+  appModalBody.append(launchRow, status);
+
+  // Info
+  const h1 = document.createElement("h4"); h1.textContent = "Info"; appModalBody.append(h1);
+  const dl = document.createElement("dl"); dl.className = "kv";
+  kvRow(dl, "Package", d.package);
+  kvRow(dl, "Version", `${d.versionName ?? "—"} (${d.versionCode ?? "—"})`);
+  kvRow(dl, "SDK", `min ${d.minSdk ?? "—"} · target ${d.targetSdk ?? "—"}`);
+  kvRow(dl, "UID", String(d.uid ?? "—"));
+  kvRow(dl, "Installer", d.installer || "—");
+  kvRow(dl, "Flags", [d.system && "system", d.debuggable && "debuggable", d.enabled === false && "disabled"].filter(Boolean).join(", ") || "—");
+  kvRow(dl, "First install", fmtDateTime(d.firstInstall));
+  kvRow(dl, "Last update", fmtDateTime(d.lastUpdate));
+  kvRow(dl, "Data dir", d.dataDir || "—");
+  kvRow(dl, "APK", d.sourceDir || "—");
+  appModalBody.append(dl);
+
+  // Managed configuration — capability (declared by app) + values (set by MDM).
+  const schema = d.appConfigSchema || [];
+  const h2 = document.createElement("h4"); h2.textContent = "Managed configuration"; appModalBody.append(h2);
+  const supLine = document.createElement("p"); supLine.className = "muted";
+  supLine.textContent = d.supportsAppConfig
+    ? `✓ App supports managed configuration — ${schema.length} key${schema.length === 1 ? "" : "s"} available.`
+    : "✗ App does not declare a managed-configuration schema.";
+  appModalBody.append(supLine);
+  if (schema.length) {
+    const det = document.createElement("details"); det.className = "dump"; det.open = true;
+    const sum = document.createElement("summary"); sum.textContent = "Available keys (declared by app)";
+    const tree = document.createElement("div"); tree.style.padding = "0 1rem 1rem";
+    appendSchemaTree(tree, schema, 0);
+    det.append(sum, tree); appModalBody.append(det);
+  }
+  if (configs.length) {
+    for (const b of configs) appModalBody.append(detailsBlock(b.admin ? `Values set by MDM — enforced by ${b.admin}` : "Values set by MDM", prettyBundle(b.body)));
+  } else if (d.supportsAppConfig) {
+    const n = document.createElement("p"); n.className = "muted"; n.textContent = "No values currently set by an MDM."; appModalBody.append(n);
+  }
+
+  // Permissions
+  const perms = d.permissions || [];
+  const grantedN = perms.filter((p) => p.granted).length;
+  const ph = document.createElement("h4"); ph.textContent = `Permissions (${grantedN}/${perms.length} granted)`; appModalBody.append(ph);
+  const pwrap = document.createElement("div");
+  for (const p of perms.sort((a, b) => (b.granted - a.granted) || a.name.localeCompare(b.name))) {
+    const row = document.createElement("div"); row.className = "perm-row";
+    const dot = document.createElement("span"); dot.className = `perm-dot ${p.granted ? "granted" : "denied"}`;
+    const nm = document.createElement("span"); nm.textContent = p.name.replace(/^android\.permission\./, "");
+    row.append(dot, nm); pwrap.append(row);
+  }
+  appModalBody.append(pwrap);
+
+  // Activities (launchable) + other components
+  appModalBody.append(componentSection("Activities", d.activities, true, d.package, userId, status));
+  appModalBody.append(detailsBlock(`Services (${(d.services || []).length})`, (d.services || []).map((c) => `${c.name}${c.exported ? "  [exported]" : ""}`).join("\n") || "(none)"));
+  appModalBody.append(detailsBlock(`Receivers (${(d.receivers || []).length})`, (d.receivers || []).map((c) => `${c.name}${c.exported ? "  [exported]" : ""}`).join("\n") || "(none)"));
+  appModalBody.append(detailsBlock(`Providers (${(d.providers || []).length})`, (d.providers || []).map((c) => `${c.name}${c.exported ? "  [exported]" : ""}`).join("\n") || "(none)"));
+}
+
+// Recursively render the app-config schema (bundle / bundle-array nest).
+function appendSchemaTree(container, entries, depth) {
+  for (const e of entries) {
+    const row = document.createElement("div");
+    row.style.cssText = `padding:.15rem 0;padding-left:${depth * 1.3}rem;font-size:.82rem;`;
+    const k = document.createElement("span");
+    k.style.cssText = "color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace;";
+    k.textContent = e.key;
+    const t = document.createElement("span"); t.className = "muted";
+    t.textContent = `  ${e.type}${e.title ? ` · ${e.title}` : ""}${e.description ? ` — ${e.description}` : ""}`;
+    row.append(k, t); container.append(row);
+    if (e.children && e.children.length) appendSchemaTree(container, e.children, depth + 1);
+  }
+}
+
+function componentSection(title, list, launchable, pkg, userId, status) {
+  const wrap = document.createElement("div");
+  const h = document.createElement("h4"); h.textContent = `${title} (${(list || []).length})`; wrap.append(h);
+  for (const c of (list || [])) {
+    const row = document.createElement("div"); row.className = "comp-row";
+    const badge = document.createElement("span"); badge.className = `exp-badge ${c.exported ? "exported" : ""}`; badge.textContent = c.exported ? "exported" : "internal";
+    const name = document.createElement("span"); name.className = "cname"; name.textContent = c.name;
+    row.append(badge, name);
+    if (launchable) {
+      const b = document.createElement("button"); b.textContent = "Launch";
+      const comp = `${pkg}/${c.name}`;
+      b.addEventListener("click", () => launchComponent(comp, userId, status));
+      row.append(b);
+    }
+    wrap.append(row);
+  }
+  return wrap;
 }
 
 appsRefreshBtn.addEventListener("click", listApps);
@@ -1674,6 +1869,113 @@ const SETTINGS_SECURE = [
   "managed_provisioning_dpc_downloaded", "lockscreen.disabled", "default_input_method",
 ];
 
+// ---- Management deep parsers ----
+
+function condensePolicyValue(s) {
+  if (!s) return "";
+  s = s.trim();
+  if (/^null$/i.test(s)) return "null";
+  const mv = s.match(/mValue=\s*([\s\S]*?)\s*\}\s*$/);
+  if (mv) { let v = mv[1].trim(); if (v.startsWith("Bundle[")) return "Bundle[…]"; return v; }
+  if (s.startsWith("Bundle[")) return "Bundle[…]";
+  return s.length > 80 ? s.slice(0, 80) + "…" : s;
+}
+
+// Parse DevicePolicyEngine policy states: configured per-admin value(s) vs the
+// resolved/effective value. Flags policies that did not apply (resolved null).
+function parsePolicyStates(dp) {
+  const lines = dp.split("\n");
+  const entries = [];
+  let cur = null, section = null;
+  const keyRe = /(\w*PolicyKey)\s*\{([^}]*)\}/;
+  for (const line of lines) {
+    const t = line.trim();
+    const km = line.match(keyRe);
+    if (km && /mPolicyKey=/.test(km[2])) {
+      if (cur) entries.push(cur);
+      const inner = km[2];
+      const key = (inner.match(/mPolicyKey=\s*([^;,}]+)/) || [])[1]?.trim() || km[1];
+      const pkg = (inner.match(/mPackageName=\s*([\w.]+)/) || [])[1];
+      const restr = (inner.match(/mRestriction=\s*([\w.]+)/) || [])[1];
+      let label = key; if (pkg) label += ` (${pkg})`; if (restr) label += `: ${restr}`;
+      cur = { label, pkg, admins: [], resolved: null }; section = null;
+      continue;
+    }
+    if (!cur) continue;
+    if (/Per-admin Policy:/i.test(t)) { section = "admin"; continue; }
+    if (/Resolved Policy/i.test(t)) { section = "resolved"; continue; }
+    if (section === "admin") {
+      const am = line.match(/EnforcingAdmin\s*\{[^}]*?(?:mComponentName=\s*ComponentInfo\{([^}]+)\}|mPackageName=\s*([\w.]+))/);
+      if (am) { cur.admins.push({ admin: am[1] || am[2], value: null }); continue; }
+      // Only accept real policy values — skip metadata lines (counts, hashcodes).
+      if (cur.admins.length && (/PolicyValue/.test(t) || /^(true|false|null)$/i.test(t))) {
+        const last = cur.admins[cur.admins.length - 1];
+        if (last.value == null) last.value = condensePolicyValue(t);
+      }
+      continue;
+    }
+    if (section === "resolved") { if (t) { cur.resolved = condensePolicyValue(t); section = null; } continue; }
+  }
+  if (cur) entries.push(cur);
+  return entries.map((e) => ({ ...e, applied: !!e.resolved && e.resolved.toLowerCase() !== "null" }));
+}
+
+// Pull readable fields from an Android cacert file (PEM + openssl text dump).
+function parseCertText(t) {
+  if (!t) return { raw: "" };
+  const cn = (re) => { const m = t.match(re); if (!m) return null; const c = m[1].match(/CN\s*=\s*([^,\/\n]+)/i); return (c ? c[1] : m[1]).trim(); };
+  return {
+    raw: t,
+    subject: cn(/Subject:\s*(.+)/),
+    issuer: cn(/Issuer:\s*(.+)/),
+    notAfter: (t.match(/Not After\s*:?\s*(.+)/i) || [])[1]?.trim(),
+    notBefore: (t.match(/Not Before\s*:?\s*(.+)/i) || [])[1]?.trim(),
+  };
+}
+
+function parseCerts(dp) {
+  const caLines = dp.split("\n").map((l) => l.trim())
+    .filter((l) => /ca[\s_-]?cert|installed ca|trusted certificate/i.test(l) && l);
+  const keyPairs = dp.split("\n").map((l) => l.trim())
+    .filter((l) => /keypair|key pair|keychain|granted.*alias|mKeyGrants/i.test(l) && l);
+  const aliasRe = /(?:cert_?alias|certificate_?alias|login_certificate|signing_certificate|keypair_alias|client_certificate)\s*=\s*([^,}\]\n]+)/gi;
+  const aliases = [...new Set([...dp.matchAll(aliasRe)]
+    .map((m) => m[1].trim())
+    .filter((v) => v && !/^[{[]/.test(v) && !v.includes("=") && !/^(true|false|\$DEFAULT\$|null)$/i.test(v)))];
+  return { caLines: [...new Set(caLines)], keyPairs: [...new Set(keyPairs)], aliases };
+}
+
+function parseAccounts(dump) {
+  const out = [];   // { user, type, name }
+  let user = null;
+  for (const line of dump.split("\n")) {
+    const um = line.match(/User\s+UserInfo\{(\d+)|^\s*User\s+(\d+)/);
+    if (um) { user = um[1] || um[2]; continue; }
+    const am = line.match(/Account\s*\{name=(.+?),\s*type=([\w.]+)\}/);
+    if (am) out.push({ user, name: am[1], type: am[2] });
+  }
+  return out;
+}
+
+function parseWifi(list) {
+  // Devices list each saved network once per security type (WPA2/WPA3
+  // transition) with a trailing "^" marker — group by SSID, merge types.
+  const map = new Map();
+  for (const line of list.split("\n")) {
+    const m = line.match(/^\s*\d+\s+(\S.*?)\s{2,}(\S.*)$/);
+    if (!m || /Network Id/i.test(line)) continue;
+    const ssid = m[1].trim();
+    const sec = m[2].trim().replace(/\^+$/, "").trim();
+    const set = map.get(ssid) || map.set(ssid, new Set()).get(ssid);
+    if (sec) set.add(sec);
+  }
+  return [...map.entries()]
+    .map(([ssid, set]) => ({ ssid, security: [...set].join(", ") }))
+    .sort((a, b) => a.ssid.localeCompare(b.ssid));
+}
+
+let lastMgmt = null;   // gathered data for the diagnostics export
+
 async function loadManagement() {
   setMgmtRefreshDisabled(true);
   setMgmtStatus("Loading…");
@@ -1682,6 +1984,10 @@ async function loadManagement() {
   mgmtPoliciesEl.replaceChildren();
   mgmtAppPoliciesEl.replaceChildren();
   mgmtAppconfigEl.replaceChildren();
+  mgmtEffectiveEl.replaceChildren();
+  mgmtCertsEl.replaceChildren();
+  mgmtNetworkEl.replaceChildren();
+  mgmtDiagEl.replaceChildren();
   mgmtRawEl.replaceChildren();
   dlog("management ▶");
   try {
@@ -1700,6 +2006,10 @@ async function loadManagement() {
         sh(sCmd).catch(() => ""),
         sh("dpm list-owners 2>/dev/null").catch(() => ""),
       ]);
+    const [accountsDump, wifiList] = await Promise.all([
+      sh("dumpsys account").catch(() => ""),
+      sh("cmd wifi list-networks 2>/dev/null").catch(() => ""),
+    ]);
 
     const props = parseProps(propsRaw);
     const g = parseKv(gRaw), s = parseKv(sRaw);
@@ -1921,11 +2231,51 @@ async function loadManagement() {
       mgmtAppconfigEl.prepend(note);
     }
 
+    // ---- Effective policy (configured vs resolved) ----
+    const policyStates = parsePolicyStates(dp);
+    // Installed packages across all profiles — to tell "no target" apart from
+    // a real apply failure.
+    const instRaw = await Promise.all(
+      parseUsers(pmUsers, m.profileOwners).map((u) => sh(`pm list packages --user ${u.id}`).catch(() => "")),
+    );
+    const installedSet = new Set(instRaw.join("\n").split("\n").map((l) => l.replace(/^package:/, "").trim()).filter(Boolean));
+    renderEffective(policyStates, installedSet);
+
+    // ---- Certificates ----
+    const certs = parseCerts(dp);
+    // Enumerate trusted CAs via the dex (AndroidCAStore, parsed X509) — no root,
+    // system + user/DPC-added, with subject/issuer/validity.
+    certs.dexCerts = [];
+    try {
+      await ensureDexPushed();
+      const out = await sh(`CLASSPATH=${DEX_DEVICE_PATH} app_process / Main certs`);
+      const seenCert = new Set();
+      certs.dexCerts = out.split("\n").map((line) => line.split("\t"))
+        .filter((f) => f.length === 6 && /^(system|user-\d+)$/.test(f[0]))
+        .map(([source, subject, issuer, serial, nb, na]) => ({ source, subject, issuer, serial, notBefore: +nb, notAfter: +na }))
+        .filter((c) => { const k = `${c.source}|${c.serial}|${c.subject}`; if (seenCert.has(k)) return false; seenCert.add(k); return true; });
+      dlog(`certs ✓ (${certs.dexCerts.length})`);
+    } catch (e) { dlog("certs dex ✗", e?.message ?? e); }
+    // Work-profile user ids — used to flag the read limitation in the UI.
+    certs.workUsers = parseUsers(pmUsers, m.profileOwners).filter((u) => u.managed).map((u) => u.id);
+    renderCerts(certs);
+
+    // ---- Accounts & network ----
+    const accounts = parseAccounts(accountsDump);
+    const wifi = parseWifi(wifiList);
+    renderNetwork(accounts, wifi, g, s, m);
+
+    // ---- Diagnostics ----
+    lastMgmt = { m, dp, owners, dpmOwners, usersDump, accountsDump, wifiList, propsRaw, gRaw, sRaw, selinux, policyStates, installedSet, certs, accounts };
+    renderDiag(policyStates, certs, accounts);
+
     // Raw dumps
     mgmtRawEl.replaceChildren(
       detailsBlock("Owners (cmd device_policy list-owners)", owners + (dpmOwners && dpmOwners !== owners ? "\n\n--- dpm list-owners ---\n" + dpmOwners : "")),
       detailsBlock("Disabled / suspended packages (pm list packages -d)", disabled),
       detailsBlock("Users (dumpsys user)", usersDump),
+      detailsBlock("Accounts (dumpsys account)", accountsDump),
+      detailsBlock("Wi-Fi networks (cmd wifi list-networks)", wifiList),
       detailsBlock("Full device policy (dumpsys device_policy)", dp),
     );
 
@@ -1939,6 +2289,236 @@ async function loadManagement() {
     setMgmtRefreshDisabled(!adb);
   }
 }
+function mgmtNote(parent, text) {
+  const p = document.createElement("p"); p.className = "muted"; p.textContent = text; parent.append(p);
+}
+
+// Classify a policy's effective status using the resolved value AND whether its
+// target package is installed (so "no target" ≠ a real failure).
+function effectiveStatus(s, installedSet) {
+  const resolved = s.resolved && s.resolved.toLowerCase() !== "null" ? s.resolved : null;
+  if (s.pkg && installedSet && !installedSet.has(s.pkg)) return { cls: "muted-st", text: "target not installed" };
+  if (resolved) return { cls: "ok", text: "✓ effective" };
+  // configured but engine resolved null on an installed/global target
+  return { cls: "warn-st", text: "set · not resolved" };
+}
+
+function renderEffective(states, installedSet) {
+  mgmtEffectiveEl.replaceChildren();
+  if (!states.length) { mgmtNote(mgmtEffectiveEl, "No policy-engine states found (older Android, or no policies set)."); return; }
+  for (const s of states) s._st = effectiveStatus(s, installedSet);
+
+  const onlyIssues = effOnlyIssuesEl?.checked;
+  const issues = states.filter((s) => s._st.cls === "warn-st");
+  const noTarget = states.filter((s) => s._st.cls === "muted-st");
+  const list = onlyIssues ? issues : states;
+  mgmtNote(mgmtEffectiveEl, `${states.length} policies · ${issues.length} set-but-unresolved · ${noTarget.length} target not installed`);
+
+  const tbl = document.createElement("table"); tbl.className = "ptable";
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  for (const h of ["Policy", "Configured (by admin)", "Resolved (effective)", "Status"]) {
+    const th = document.createElement("th"); th.textContent = h; hr.append(th);
+  }
+  thead.append(hr); tbl.append(thead);
+  const tb = document.createElement("tbody");
+  for (const s of list) {
+    const tr = document.createElement("tr"); if (s._st.cls === "warn-st") tr.className = "warn-row";
+    const c1 = document.createElement("td"); c1.textContent = s.label;
+    const am = new Map();
+    for (const a of s.admins) {
+      if (a.value == null) continue;
+      const k = shortInstaller((a.admin || "").split("/")[0]);
+      (am.get(k) || am.set(k, new Set()).get(k)).add(a.value);
+    }
+    const c2 = document.createElement("td");
+    c2.textContent = [...am.entries()].map(([adm, set]) => `${adm}=${[...set].join(" / ")}`).join("; ") || "—";
+    const c3 = document.createElement("td"); c3.textContent = s.resolved ?? "—";
+    const c4 = document.createElement("td"); c4.textContent = s._st.text;
+    if (s._st.cls === "ok") c4.className = "ok";
+    else if (s._st.cls === "warn-st") c4.style.color = "#b06000";
+    else if (s._st.cls === "muted-st") c4.style.color = "var(--muted)";
+    tr.append(c1, c2, c3, c4); tb.append(tr);
+  }
+  tbl.append(tb); mgmtEffectiveEl.append(tbl);
+}
+effOnlyIssuesEl?.addEventListener("change", () => { if (lastMgmt) renderEffective(lastMgmt.policyStates, lastMgmt.installedSet); });
+
+function certCN(dn) { return (dn && dn.match(/CN=([^,]+)/) || [])[1] || dn || "—"; }
+function fmtDate(ms) { if (!ms) return "—"; try { return new Date(ms).toLocaleDateString(); } catch { return String(ms); } }
+
+function sourceLabel(src) {
+  if (src === "system") return "System";
+  const m = (src || "").match(/user-(\d+)/);
+  if (!m) return src || "User";
+  return m[1] === "0" ? "Personal (user 0)" : `Work profile (user ${m[1]})`;
+}
+
+function renderCerts(c) {
+  mgmtCertsEl.replaceChildren();
+  const dex = c.dexCerts || [];
+  const now = Date.now();
+  if (!dex.length) mgmtNote(mgmtCertsEl, "Could not read the CA store (dex/app_process unavailable).");
+
+  // User-added CAs grouped by profile (Personal / Work) — what MDMs push.
+  const userCerts = dex.filter((x) => x.source !== "system");
+  const bySource = new Map();
+  for (const ca of userCerts) (bySource.get(ca.source) || bySource.set(ca.source, []).get(ca.source)).push(ca);
+  const order = [...bySource.keys()].sort((a, b) => (a === "user-0" ? -1 : b === "user-0" ? 1 : a.localeCompare(b)));
+
+  const uh = document.createElement("h3"); uh.className = "section-h";
+  uh.textContent = `User-added CA certificates (${userCerts.length})`;
+  mgmtCertsEl.append(uh);
+  if (!userCerts.length && dex.length) mgmtNote(mgmtCertsEl, "No user- or admin-installed CA certificates on the personal profile.");
+
+  // Explicit limitation: work-profile user CAs we couldn't read.
+  for (const uid of (c.workUsers || [])) {
+    if (dex.some((x) => x.source === `user-${uid}`)) continue;
+    const w = document.createElement("p"); w.className = "warn";
+    w.textContent = `Work-profile (user ${uid}) user-installed CA certificates can't be read over ADB without root. ` +
+      `The cert files are owned by the system (permission-denied to shell), and the per-user KeyChain service can't be bound from app_process ` +
+      `("Unable to find app for caller"). Reading them requires root, the device's DPC, or a companion app inside the work profile. ` +
+      `System CAs and personal-profile user CAs above are complete.`;
+    mgmtCertsEl.append(w);
+  }
+  for (const src of order) {
+    const grpH = document.createElement("h3"); grpH.className = "section-h"; grpH.style.fontSize = ".9rem";
+    grpH.textContent = sourceLabel(src);
+    if (/user-[1-9]/.test(src)) { const t = document.createElement("span"); t.className = "tag managed"; t.textContent = "Work"; t.style.marginLeft = ".5rem"; grpH.append(t); }
+    mgmtCertsEl.append(grpH);
+    for (const ca of bySource.get(src).sort((a, b) => certCN(a.subject).localeCompare(certCN(b.subject)))) {
+      mgmtCertsEl.append(certCard(ca, now));
+    }
+  }
+
+  // Certificate aliases referenced in managed configs.
+  if (c.aliases.length) {
+    const card = document.createElement("div"); card.className = "card policy-card";
+    const h = document.createElement("h3"); h.textContent = `Certificate aliases (referenced in configs) (${c.aliases.length})`;
+    const chips = document.createElement("div"); chips.className = "chips";
+    for (const a of c.aliases) { const sp = document.createElement("span"); sp.className = "chip"; sp.textContent = a; chips.append(sp); }
+    card.append(h, chips); mgmtCertsEl.append(card);
+  }
+
+  // System trusted CAs — collapsible (subject + expiry).
+  const sysCerts = dex.filter((x) => x.source === "system");
+  if (sysCerts.length) {
+    const txt = sysCerts
+      .sort((a, b) => certCN(a.subject).localeCompare(certCN(b.subject)))
+      .map((x) => `${certCN(x.subject)}  —  expires ${fmtDate(x.notAfter)}`).join("\n");
+    mgmtCertsEl.append(detailsBlock(`System trusted CAs (${sysCerts.length})`, txt));
+  }
+  if (c.keyPairs.length) mgmtCertsEl.append(detailsBlock(`Key-pair grants / KeyChain (${c.keyPairs.length})`, c.keyPairs.join("\n")));
+}
+
+function certCard(ca, now) {
+  const card = document.createElement("div"); card.className = "card policy-card";
+  const h = document.createElement("h3"); h.textContent = certCN(ca.subject);
+  if (ca.notAfter && ca.notAfter < now) { const t = document.createElement("span"); t.className = "tag"; t.style.cssText = "background:#fce8e6;color:#c5221f;margin-left:.5rem;"; t.textContent = "EXPIRED"; h.append(t); }
+  card.append(h);
+  const dl = document.createElement("dl"); dl.className = "kv";
+  kvRow(dl, "Subject", ca.subject || "—");
+  kvRow(dl, "Issuer", ca.issuer || "—");
+  kvRow(dl, "Valid", `${fmtDate(ca.notBefore)} → ${fmtDate(ca.notAfter)}`);
+  kvRow(dl, "Serial", ca.serial || "—");
+  kvRow(dl, "Alias", ca.alias || "—");
+  card.append(dl);
+  return card;
+}
+
+function renderNetwork(accounts, wifi, g, s, m) {
+  mgmtNetworkEl.replaceChildren();
+  // Accounts
+  const aCard = document.createElement("div"); aCard.className = "card policy-card";
+  const ah = document.createElement("h3"); ah.textContent = `Accounts (${accounts.length})`; aCard.append(ah);
+  if (accounts.length) {
+    const dl = document.createElement("dl"); dl.className = "kv";
+    for (const a of accounts) kvRow(dl, `${a.name}`, `${a.type}${a.user != null ? ` · user ${a.user}` : ""}`);
+    aCard.append(dl);
+  } else { mgmtNote(aCard, "No accounts (or not visible to shell)."); }
+  mgmtNetworkEl.append(aCard);
+
+  // Network summary
+  const nCard = document.createElement("div"); nCard.className = "card policy-card";
+  const nh = document.createElement("h3"); nh.textContent = "Network"; nCard.append(nh);
+  const ndl = document.createElement("dl"); ndl.className = "kv";
+  const vpnApp = g.get("always_on_vpn_app");
+  kvRow(ndl, "Always-on VPN", vpnApp ? `${vpnApp}${g.get("always_on_vpn_lockdown") === "1" ? " (lockdown)" : ""}` : "none");
+  kvRow(ndl, "Private DNS", [g.get("private_dns_mode"), g.get("private_dns_specifier")].filter(Boolean).join(": ") || "—");
+  kvRow(ndl, "HTTP proxy", g.get("http_proxy") || [g.get("global_http_proxy_host"), g.get("global_http_proxy_port")].filter(Boolean).join(":") || "none");
+  nCard.append(ndl); mgmtNetworkEl.append(nCard);
+
+  // Wi-Fi
+  const wCard = document.createElement("div"); wCard.className = "card policy-card";
+  const wh = document.createElement("h3"); wh.textContent = `Configured Wi-Fi networks (${wifi.length})`; wCard.append(wh);
+  if (wifi.length) {
+    const chips = document.createElement("div"); chips.className = "chips";
+    for (const w of wifi) { const sp = document.createElement("span"); sp.className = "chip"; sp.textContent = `${w.ssid} · ${w.security}`; chips.append(sp); }
+    wCard.append(chips);
+  } else { mgmtNote(wCard, "None listed (needs Android 11+ / shell Wi-Fi access)."); }
+  mgmtNetworkEl.append(wCard);
+}
+
+function renderDiag(states, certs, accounts) {
+  mgmtDiagEl.replaceChildren();
+  const card = document.createElement("div"); card.className = "card policy-card";
+  const h = document.createElement("h3"); h.textContent = "Snapshot"; card.append(h);
+  const dl = document.createElement("dl"); dl.className = "kv";
+  const m = lastMgmt?.m;
+  kvRow(dl, "Mode", m?.mode || "—");
+  kvRow(dl, "DPC", [...dpcPkgsGlobal].join(", ") || "—");
+  kvRow(dl, "Policy states", String(states.length));
+  kvRow(dl, "Set · not resolved", String(states.filter((x) => x._st?.cls === "warn-st").length));
+  kvRow(dl, "Target not installed", String(states.filter((x) => x._st?.cls === "muted-st").length));
+  kvRow(dl, "Certificate aliases", String(certs.aliases.length));
+  kvRow(dl, "Accounts", String(accounts.length));
+  card.append(dl); mgmtDiagEl.append(card);
+}
+
+// Diagnostics actions.
+diagLogcatBtn?.addEventListener("click", () => {
+  const dpc = [...dpcPkgsGlobal][0];
+  if (dpc) pkgEl.value = dpc;
+  showView("logcat");
+  for (const n of navItems) n.classList.toggle("active", n.dataset.view === "logcat");
+  diagStatusEl.textContent = dpc ? `Logcat package filter set to ${dpc}` : "No DPC detected";
+});
+
+diagExportBtn?.addEventListener("click", () => {
+  if (!lastMgmt) { diagStatusEl.textContent = "Open a Management tab first."; return; }
+  const d = lastMgmt;
+  const lines = [];
+  lines.push(`# Android management diagnostic report`);
+  lines.push(`Device: ${deviceSerial}`);
+  lines.push(`Mode: ${d.m.mode}`);
+  lines.push(`DPC: ${[...dpcPkgsGlobal].join(", ") || "—"}`);
+  lines.push("");
+  lines.push(`## Policies set but not resolved (installed target, resolved=null)`);
+  const bad = d.policyStates.filter((p) => p._st?.cls === "warn-st");
+  lines.push(bad.length ? bad.map((p) => `- ${p.label} → resolved=${p.resolved}`).join("\n") : "(none)");
+  lines.push("");
+  lines.push(`## Policies whose target app is not installed`);
+  const noTgt = d.policyStates.filter((p) => p._st?.cls === "muted-st");
+  lines.push(noTgt.length ? noTgt.map((p) => `- ${p.label}`).join("\n") : "(none)");
+  lines.push("");
+  lines.push(`## Certificate aliases`);
+  lines.push(d.certs.aliases.join("\n") || "(none)");
+  lines.push("");
+  lines.push(`## Accounts`);
+  lines.push(d.accounts.map((a) => `- ${a.name} (${a.type}) user ${a.user}`).join("\n") || "(none)");
+  lines.push("");
+  lines.push(`## Raw: cmd device_policy list-owners`);
+  lines.push(d.owners);
+  lines.push("");
+  lines.push(`## Raw: dumpsys account`);
+  lines.push(d.accountsDump);
+  lines.push("");
+  lines.push(`## Raw: dumpsys device_policy`);
+  lines.push(d.dp);
+  saveBlob(new Blob([lines.join("\n")], { type: "text/markdown" }), `mdm-diagnostic-${deviceSerial}.md`);
+  diagStatusEl.textContent = "Report downloaded.";
+});
+
 for (const b of mgmtRefreshBtns) b.addEventListener("click", loadManagement);
 
 // Initial state.
