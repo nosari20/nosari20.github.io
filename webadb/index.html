@@ -276,6 +276,9 @@
           <button id="mirrorStart" class="btn">Start mirroring</button>
           <button id="mirrorStop" class="btn outline" disabled>Stop</button>
           <button id="mirrorFs" class="btn outline" disabled>Fullscreen</button>
+          <button id="mirrorShot" class="btn outline" disabled>Screenshot</button>
+          <button id="mirrorRec" class="btn outline" disabled>● Record</button>
+          <label class="inline"><input type="checkbox" id="audioEn"> Audio</label>
           <label class="inline">Max size
             <select id="maxSize">
               <option value="0">Native</option>
@@ -292,9 +295,12 @@
           <div id="screenEmpty" class="screen-empty">Not mirroring. Click “Start mirroring”.</div>
         </div>
         <p class="muted" style="margin-top:.75rem;">
-          Video only (no input control). Requires a browser with the WebCodecs
-          H.264 decoder. The scrcpy server (v3.3.3, Apache-2.0) is pushed to the
-          device on start.
+          No input control. Requires a browser with the WebCodecs H.264 decoder.
+          The scrcpy server (v3.3.3, Apache-2.0) is pushed to the device on start.
+          <strong>Audio</strong> forwards device audio as raw PCM (Android 11+;
+          played live and included in recordings). <strong>Screenshot</strong>
+          saves a PNG of the current frame; <strong>Record</strong> captures the
+          live stream to a WebM file, downloaded when you stop.
         </p>
       </div>
 
