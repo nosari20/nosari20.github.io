@@ -38,7 +38,8 @@ function setMgmtStatus(t) { for (const e of mgmtStatusEls) e.textContent = t; }
 function setMgmtRefreshDisabled(d) { for (const b of mgmtRefreshBtns) b.disabled = d; }
 const themeToggle = $("themeToggle");
 const mirrorStartBtn = $("mirrorStart"), mirrorStopBtn = $("mirrorStop"),
-      mirrorFsBtn = $("mirrorFs"), maxSizeEl = $("maxSize"),
+      mirrorFsBtn = $("mirrorFs"), mirrorShotBtn = $("mirrorShot"),
+      mirrorRecBtn = $("mirrorRec"), audioEnEl = $("audioEn"), maxSizeEl = $("maxSize"),
       mirrorStatusEl = $("mirrorStatus"), screenCanvas = $("screen"),
       screenEmpty = $("screenEmpty"), screenWrap = $("screenWrap"), fsExitBtn = $("fsExit");
 const filesUpBtn = $("filesUp"), filesPathEl = $("filesPath"), filesGoBtn = $("filesGo"),
@@ -54,6 +55,9 @@ let deviceSerial = null;        // current device serial (namespaces the icon ca
 let logProcess = null;          // running logcat process
 let scrcpyClient = null;        // running scrcpy client
 let scrcpyDecoder = null;       // running video decoder
+let scrcpyAudioCtx = null;      // AudioContext fed by raw scrcpy PCM
+let scrcpyAudioDest = null;     // MediaStreamDestination (audio track for recording)
+let scrcpyAudioReader = null;   // raw-audio stream reader (cancelled on stop)
 const MAX_LOG_LINES = 5000;     // bound the DOM/memory
 let logTail = "";               // partial (unterminated) logcat line buffer
 const credentialStore = new AdbWebCredentialStore();
@@ -584,10 +588,13 @@ async function startMirror() {
     );
 
     const maxSize = Number(maxSizeEl.value) || 0;
+    const wantAudio = audioEnEl.checked;
+    audioEnEl.disabled = true;
     // AdbScrcpyOptionsLatest takes a PLAIN init object (not a ScrcpyOptions
-    // instance) plus client options carrying the server version.
+    // instance) plus client options carrying the server version. Use the raw
+    // (uncompressed s16le) audio codec so playback needs no Opus/AAC decoder.
     const options = new AdbScrcpyOptionsLatest(
-      { video: true, audio: false, control: false, maxSize },
+      { video: true, audio: wantAudio, audioCodec: "raw", control: false, maxSize },
       { version: SCRCPY_VERSION },
     );
 
@@ -611,6 +618,8 @@ async function startMirror() {
     screenCanvas.hidden = false;
     screenEmpty.hidden = true;
     mirrorStopBtn.disabled = false;
+    mirrorShotBtn.disabled = false;
+    mirrorRecBtn.disabled = false;
     mirrorStatusEl.textContent = "Mirroring";
     dlog("scrcpy ✓ streaming", `${video.width}x${video.height}`);
 
@@ -618,6 +627,16 @@ async function startMirror() {
     video.stream.pipeTo(decoder.writable).catch((err) => {
       console.error("[scrcpy] video stream ended:", err);
     });
+
+    if (wantAudio) {
+      try {
+        const audio = await client.audioStream;   // union: success | disabled | errored
+        if (audio.type === "success") { startScrcpyAudio(audio.stream); dlog("scrcpy ♪ audio (raw)"); }
+        else { dlog("scrcpy audio unavailable:", audio.type); mirrorStatusEl.textContent = `Mirroring (audio ${audio.type})`; }
+      } catch (e) {
+        dlog("scrcpy audio error:", e?.message ?? e);
+      }
+    }
   } catch (err) {
     console.error(err);
     mirrorStatusEl.textContent = `Error: ${err?.message ?? err}`;
@@ -631,13 +650,18 @@ async function stopMirror() {
   const client = scrcpyClient, decoder = scrcpyDecoder;
   scrcpyClient = null; scrcpyDecoder = null;
   if (client) dlog("scrcpy ■ stop");
+  if (mediaRecorder) stopRecording();
+  stopScrcpyAudio();
   try { decoder?.dispose(); } catch {}
   try { await client?.close(); } catch {}
+  audioEnEl.disabled = false;
   setFullscreen(false);
   screenCanvas.hidden = true;
   screenEmpty.hidden = false;
   mirrorStartBtn.disabled = !adb;
   mirrorStopBtn.disabled = true;
+  mirrorShotBtn.disabled = true;
+  mirrorRecBtn.disabled = true;
   mirrorFsBtn.disabled = !adb;
   if (mirrorStatusEl.textContent === "Mirroring") mirrorStatusEl.textContent = "Stopped";
 }
@@ -647,9 +671,139 @@ function setFullscreen(on) {
   fsExitBtn.hidden = !on;
 }
 
+// ---- Raw audio playback (scrcpy audioCodec: raw → s16le, 48kHz stereo) ------
+
+const SCRCPY_AUDIO_RATE = 48000, SCRCPY_AUDIO_CH = 2;
+
+async function startScrcpyAudio(stream) {
+  const ctx = new AudioContext({ sampleRate: SCRCPY_AUDIO_RATE });
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});   // autoplay policy
+  scrcpyAudioCtx = ctx;
+  scrcpyAudioDest = ctx.createMediaStreamDestination();   // tapped by the recorder
+  let playHead = ctx.currentTime + 0.15;                  // small lead to absorb jitter
+  const reader = stream.getReader();
+  scrcpyAudioReader = reader;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      // Packets are { type: "configuration" | "data", data: Uint8Array, ... }.
+      if (!value || value.type !== "data" || !value.data?.byteLength) continue;
+      const bytes = value.data;
+      // Copy into an aligned buffer so Int16Array can view it (offset may be odd).
+      const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+      const i16 = new Int16Array(ab);
+      const frames = Math.floor(i16.length / SCRCPY_AUDIO_CH);
+      if (!frames) continue;
+      const buf = ctx.createBuffer(SCRCPY_AUDIO_CH, frames, SCRCPY_AUDIO_RATE);
+      for (let ch = 0; ch < SCRCPY_AUDIO_CH; ch++) {
+        const out = buf.getChannelData(ch);
+        for (let i = 0; i < frames; i++) out[i] = i16[i * SCRCPY_AUDIO_CH + ch] / 32768;
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);       // speakers
+      src.connect(scrcpyAudioDest);       // recording tap
+      if (playHead < ctx.currentTime) playHead = ctx.currentTime + 0.05;   // re-sync after a stall
+      src.start(playHead);
+      playHead += buf.duration;
+    }
+  } catch (e) {
+    if (scrcpyAudioReader === reader) dlog("scrcpy audio stream ended:", e?.message ?? e);
+  }
+}
+
+function stopScrcpyAudio() {
+  const reader = scrcpyAudioReader, ctx = scrcpyAudioCtx;
+  scrcpyAudioReader = null; scrcpyAudioCtx = null; scrcpyAudioDest = null;
+  if (reader) { try { reader.cancel(); } catch {} }
+  if (ctx) { try { ctx.close(); } catch {} }
+}
+
+// ---- Screenshot + recording (from the live scrcpy canvas) ------------------
+
+let mediaRecorder = null;       // active MediaRecorder while recording
+let recChunks = null;           // collected webm blobs
+
+function tsName() {
+  // device serial + wall-clock — Date is fine in the browser
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function captureScreenshot() {
+  if (!scrcpyClient || screenCanvas.hidden) return;
+  screenCanvas.toBlob((blob) => {
+    if (!blob) { mirrorStatusEl.textContent = "Screenshot failed."; return; }
+    downloadBlob(blob, `screenshot-${tsName()}.png`);
+    dlog("screenshot ✓", `${screenCanvas.width}x${screenCanvas.height}`);
+  }, "image/png");
+}
+
+function pickRecMime() {
+  const cands = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm",
+  ];
+  return cands.find((m) => MediaRecorder.isTypeSupported(m)) || "";
+}
+
+function startRecording() {
+  if (mediaRecorder || !scrcpyClient || screenCanvas.hidden) return;
+  // captureStream pulls frames straight from the canvas the decoder paints to.
+  const stream = screenCanvas.captureStream(30);
+  // Merge device audio (if mirroring with audio enabled) into the recording.
+  if (scrcpyAudioDest) for (const t of scrcpyAudioDest.stream.getAudioTracks()) stream.addTrack(t);
+  const mimeType = pickRecMime();
+  let rec;
+  try {
+    rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+  } catch (err) {
+    mirrorStatusEl.textContent = `Record unsupported: ${err?.message ?? err}`;
+    return;
+  }
+  recChunks = [];
+  rec.ondataavailable = (e) => { if (e.data && e.data.size) recChunks.push(e.data); };
+  rec.onstop = () => {
+    const blob = new Blob(recChunks, { type: rec.mimeType || "video/webm" });
+    recChunks = null;
+    if (blob.size) { downloadBlob(blob, `recording-${tsName()}.webm`); dlog("recording ✓", `${blob.size} bytes`); }
+    stream.getTracks().forEach((t) => t.stop());
+  };
+  mediaRecorder = rec;
+  rec.start(1000);   // emit a chunk every second so long recordings stay bounded
+  mirrorRecBtn.textContent = "■ Stop recording";
+  mirrorRecBtn.classList.add("danger-outline");
+  mirrorStatusEl.textContent = "Recording…";
+  dlog("recording ▶", mimeType || "default");
+}
+
+function stopRecording() {
+  const rec = mediaRecorder;
+  mediaRecorder = null;
+  mirrorRecBtn.textContent = "● Record";
+  mirrorRecBtn.classList.remove("danger-outline");
+  if (rec && rec.state !== "inactive") { try { rec.stop(); } catch {} }
+  if (mirrorStatusEl.textContent === "Recording…") mirrorStatusEl.textContent = "Mirroring";
+}
+
 mirrorStartBtn.addEventListener("click", startMirror);
 mirrorStopBtn.addEventListener("click", () => { stopMirror(); });
 mirrorFsBtn.addEventListener("click", () => setFullscreen(!screenWrap.classList.contains("fullscreen")));
+mirrorShotBtn.addEventListener("click", captureScreenshot);
+mirrorRecBtn.addEventListener("click", () => { mediaRecorder ? stopRecording() : startRecording(); });
 fsExitBtn.addEventListener("click", () => setFullscreen(false));
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && screenWrap.classList.contains("fullscreen")) setFullscreen(false);
