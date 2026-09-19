@@ -41,3 +41,8 @@ pygmentsOptions="linenos=table"
     pre = '<svg width="24" height="24" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 4.5v6.238c0 .375-.094.744-.273 1.074L7.54 14h8.922l-1.188-2.188A2.25 2.25 0 0 1 15 10.738V4.5h1A.75.75 0 0 0 16 3H8a.75.75 0 0 0 0 1.5h1ZM17.275 15.5H6.725l-1.582 2.915A1.75 1.75 0 0 0 6.68 21h10.638a1.75 1.75 0 0 0 1.538-2.585L17.275 15.5Z" fill="#ffffff"/></svg>'
     url = "/tags/misc/"
     weight = 3
+  [[menu.main]]
+    name = "Apps"
+    pre = '<svg width="24" height="24" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 2H8a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V5a3 3 0 0 0-3-3Zm-6 16h4a1 1 0 0 1 .117 1.993L14 20h-4a1 1 0 0 1-.117-1.993L10 18Z" fill="#ffffff"/></svg>'
+    url = "/apps/"
+    weight = 4

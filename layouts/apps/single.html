@@ -1,0 +1,12 @@
+{{ define "main" }}
+{{/* App pages such as privacy policies: no header image, a plain "last updated" line and a
+     link back to the app. Block content isn't wrapped in <p> (unlike the theme's single.html). */}}
+<article>
+    <h1><a class="title" href="{{ .RelPermalink }}">{{ .Title }}</a></h1>
+    <div class="metadata">
+        Last updated: <time datetime="{{ .Lastmod.Format "2006-01-02" }}">{{ .Lastmod.Format "Jan 2, 2006" }}</time>
+        — <a href="{{ .Parent.RelPermalink }}">{{ .Parent.Title }}</a>
+    </div>
+    {{ .Content }}
+</article>
+{{ end }}
