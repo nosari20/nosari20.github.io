@@ -1,12 +1,11 @@
 ---
-title: "Class Lock - Privacy Policy"
+title: "Class Lock — Privacy Policy"
 date: 2025-05-30
 lastmod: 2025-05-30
 draft: false
 hidden: true
-summary:  "Class Lock - Privacy Policy"
-image: "/posts/android-adb-provisioning/_header.png"
-ogimage: "/posts/android-adb-provisioning/_og.png"
+summary: "How Class Lock handles personal data."
+aliases: ["/posts/privacy-policy-class-lock/"]
 ---
 
 # Privacy Policy

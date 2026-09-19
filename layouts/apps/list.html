@@ -1,0 +1,31 @@
+{{ define "main" }}
+{{/* /apps/ lists every app; /apps/<app>/ shows the app and its pages (privacy policy…).
+     App pages are `hidden: true` so they stay off the blog lists, but they are always shown here. */}}
+<article>
+    <h1><a class="title" href="{{ .RelPermalink }}">{{ .Title }}</a></h1>
+    {{ .Content }}
+    {{ with .Params.playStore }}
+        <p><a href="{{ . }}">Get it on Google Play</a></p>
+    {{ end }}
+</article>
+{{ range .Sections.ByWeight }}
+    <article class="preview">
+        <h3><a class="title" href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Summary }}</p>
+        <ul>
+        {{ range .RegularPages }}
+            <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+        {{ end }}
+        </ul>
+    </article>
+{{ end }}
+{{ with .RegularPages }}
+    <article class="preview">
+        <ul>
+        {{ range . }}
+            <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+        {{ end }}
+        </ul>
+    </article>
+{{ end }}
+{{ end }}
