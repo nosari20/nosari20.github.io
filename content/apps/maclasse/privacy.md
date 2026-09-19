@@ -9,6 +9,8 @@ summary: "How MaClasse handles your data."
 # then paste its body (without the "# " title line) below this front matter and bump lastmod.
 ---
 
+*[Version française](/apps/maclasse/confidentialite/)*
+
 *Last updated: 19 September 2026*
 
 MaClasse is an app for teachers. **The app itself collects nothing, has no servers, and the
