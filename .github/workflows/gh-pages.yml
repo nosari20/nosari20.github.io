@@ -24,6 +24,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action installs "tools" by default, which Google removed from the SDK
+          # repository — sdkmanager then fails with "Failed to find package 'tools'".
+          # The packages this job actually needs are installed in the next step.
+          packages: ''
 
       - name: Build applist.dex
         run: |
@@ -54,7 +59,11 @@ jobs:
           if-no-files-found: error
 
   deploy:
+    # The site must publish even when the WebADB asset build breaks: those two binaries are
+    # extras for one page, while the deploy carries everything else — including the app
+    # privacy policies that Google Play links to.
     needs: webadb-assets
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,6 +73,7 @@ jobs:
 
       - name: Download WebADB assets
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: webadb-assets
           path: static/webadb/
