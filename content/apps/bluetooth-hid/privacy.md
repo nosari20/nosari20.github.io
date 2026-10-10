@@ -22,8 +22,6 @@ Bluetooth HID collects **no data**.
 |---|---|
 | Nearby devices (Bluetooth connect/advertise) | Act as a Bluetooth keyboard/mouse and become discoverable for pairing |
 | Camera | Scan QR codes and barcodes (Scan & type only) |
-| Notifications | Show the connection status of the foreground service |
-| Foreground service (connected device) | Keep the connection alive while you switch screens |
 | Vibrate | Confirm slide changes in Presenter mode |
 
 ## Contact
